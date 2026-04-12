@@ -17,7 +17,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@neondatabase/serverless": "^0.10.0",
     "@next/swc-win32-x64-msvc": "^16.2.3",
     "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/adapter-neon": "5.22.0",
