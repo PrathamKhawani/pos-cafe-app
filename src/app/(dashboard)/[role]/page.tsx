@@ -18,12 +18,14 @@ export default function BackendPage() {
   const [pendingStaff, setPendingStaff] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect kitchen role immediately to kitchen display
+  // Redirect kitchen role immediately to kitchen display - REMOVED to allow Dashboard access
+  /*
   useEffect(() => {
     if (roleSegment === 'kitchen') {
       router.replace(`/${roleSegment}/kitchen-display`);
     }
   }, [roleSegment, router]);
+  */
 
   useEffect(() => {
     async function load() {
@@ -88,7 +90,8 @@ export default function BackendPage() {
     .filter(item => item.roles.includes(effectiveRole) && item.href !== '') 
     .map(item => {
       let fullHref = item.href;
-      if (!item.href.startsWith('/pos') && !item.href.startsWith('/reports') && !item.href.startsWith('/branch-select') && !item.href.startsWith('/kitchen-display')) {
+      // Only /pos and /branch-select are actually mounted at the root directory
+      if (!item.href.startsWith('/pos') && !item.href.startsWith('/branch-select')) {
         fullHref = `/${roleSegment}${item.href}`;
       }
       return { ...item, href: fullHref };
