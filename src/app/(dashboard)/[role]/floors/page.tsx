@@ -17,8 +17,8 @@ export default function FloorsPage() {
   async function load() {
     // Use ?all=1 so the API returns floors across ALL branches (not filtered by cookie)
     const [fRes, bRes] = await Promise.all([
-      fetch('/api/floors?all=1'),
-      fetch('/api/branches'),
+      fetch('/api/floors?all=1', { cache: 'no-store' }),
+      fetch('/api/branches', { cache: 'no-store' }),
     ]);
     const fData = await fRes.json();
     const bData = await bRes.json();

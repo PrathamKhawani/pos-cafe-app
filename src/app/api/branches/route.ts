@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const branches = await prisma.branch.findMany({
