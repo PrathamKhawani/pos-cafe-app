@@ -17,12 +17,15 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Derive role from URL segment as primary/instant source
+  // Derive role from URL segment ONLY for initial UI/immediate feedback
   const roleFromUrl = currentRoleSegment === 'admin' ? 'ADMIN' : 
                      currentRoleSegment === 'staff' ? 'CASHIER' : 
                      currentRoleSegment === 'kitchen' ? 'KITCHEN' : null;
   
-  const effectiveRole = userRole || roleFromUrl;
+  // For SECURE filtering, we MUST use the role from the verified session (userRole)
+  // If userRole is still loading, we show NOTHING or only public items
+  const effectiveRole = userRole; 
+  const displayRole = userRole || roleFromUrl; // Used for non-sensitive UI if needed
 
   useEffect(() => {
     async function fetchUser() {

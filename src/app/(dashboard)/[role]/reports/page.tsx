@@ -55,7 +55,6 @@ export default function ReportsPage() {
 
   if (!data && loading) return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <Sidebar />
       <main className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -88,9 +87,8 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      <Sidebar />
-      <main className="flex-1 min-w-0">
+    <div className="min-h-screen">
+      <main className="min-w-0">
         <div className="p-6 md:p-8 max-w-[1400px] mx-auto pb-24">
 
           {/* Sticky Header */}

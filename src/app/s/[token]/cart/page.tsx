@@ -214,7 +214,7 @@ export default function SelfCartPage() {
 
       {/* Checkout Footer */}
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-3xl border-t border-gray-100 z-40 pb-safe">
+        <div className="fixed bottom-[60px] lg:bottom-0 left-0 right-0 bg-white/90 backdrop-blur-3xl border-t border-gray-100 z-40 pb-safe">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
             {/* Price Summary */}
             <div className="bg-gray-50 rounded-[32px] p-5 mb-6 space-y-2 border border-gray-100">

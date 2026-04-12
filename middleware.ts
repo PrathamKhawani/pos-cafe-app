@@ -55,25 +55,31 @@ export async function middleware(request: NextRequest) {
     const firstSegment = pathSegments[0];
     const isDashboardPath = ['admin', 'staff', 'kitchen'].includes(firstSegment);
 
-    // If on a dashboard path, ensure it matches the user's role
+    // If on a first-segment dashboard path, ensure it matches the user's role EXACTLY
     if (isDashboardPath && firstSegment !== allowedSegment) {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        // SPECIAL CASE: Allow ADMIN to visit staff/kitchen panels if needed? 
+        // User said: "only admin should have all modules access not staff and kitchen they should have their required modules only"
+        // This implies Staff and Kitchen are restricted. Admin is special.
+        if (payload.role !== 'ADMIN') {
+            return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        }
     }
 
-    // 3. Admin-Only Module Protection
-    const adminOnlyModules = ['branches', 'floors', 'categories', 'products', 'qr-print', 'staff', 'reports'];
+    // 3. Admin-Only Module Protection (Regardless of whether it's /admin/xxx or /staff/xxx)
+    const adminOnlyModules = ['branches', 'floors', 'categories', 'products', 'qr-print', 'staff', 'reports', 'payment-methods', 'sessions'];
     const currentModule = pathSegments[1];
     
     if (isDashboardPath && adminOnlyModules.includes(currentModule) && payload.role !== 'ADMIN') {
         return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 
-    if (pathname.startsWith('/kitchen') && payload.role === 'CASHIER') {
-        return NextResponse.redirect(new URL('/branch-select', request.url));
+    // Role-specific sub-routes
+    if (pathname.startsWith('/kitchen-display') && !['ADMIN', 'KITCHEN', 'CASHIER'].includes(payload.role)) {
+        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 
-    if ((pathname.startsWith('/pos') || pathname === '/branch-select') && payload.role === 'KITCHEN') {
-        return NextResponse.redirect(new URL('/kitchen', request.url));
+    if (pathname.startsWith('/pos') && !['ADMIN', 'CASHIER'].includes(payload.role)) {
+        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 
     // 3. Branch selection enforcement

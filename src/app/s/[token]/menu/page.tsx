@@ -299,7 +299,7 @@ export default function SelfMenuPage() {
 
         {/* Floating Cart Button (Mobile Only) */}
         {!isQrOnly && cartCount > 0 && (
-          <div className="lg:hidden fixed bottom-6 left-0 right-0 px-4 z-40 pointer-events-none">
+          <div className="lg:hidden fixed bottom-[84px] lg:bottom-6 left-0 right-0 px-4 z-40 pointer-events-none">
             <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="max-w-md mx-auto">
               <Link
                 href={`/s/${token}/cart`}

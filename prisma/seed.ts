@@ -499,6 +499,7 @@ async function main() {
   await prisma.orderItem.deleteMany({});
   await prisma.order.deleteMany({});
   await prisma.session.deleteMany({});
+  await prisma.branch.deleteMany({});
   await prisma.productVariant.deleteMany({});
   await prisma.product.deleteMany({});
   await prisma.category.deleteMany({});
@@ -557,46 +558,57 @@ async function main() {
   console.log(`✅ Products: ${PRODUCTS.length} (with variants)`);
 
   // ═══════════════════════════════════════════
-  // 4. FLOORS & TABLES
+  // 4. BRANCHES, FLOORS & TABLES (Dynamic)
   // ═══════════════════════════════════════════
-  const groundFloor = await prisma.floor.create({
-    data: {
-      name: 'Ground Floor',
-      tables: {
-        create: [
-          { number: 'G1', seats: 2, isActive: true },
-          { number: 'G2', seats: 4, isActive: true },
-          { number: 'G3', seats: 4, isActive: true },
-          { number: 'G4', seats: 6, isActive: true },
-          { number: 'G5', seats: 8, isActive: true },
-          { number: 'G6', seats: 4, isActive: true },
-        ],
-      },
-    },
-    include: { tables: true },
-  });
+  console.log('🏗️  Creating Branches, Floors & Tables...');
+  
+  const branches = [
+    { id: 'br-main', name: 'Downtown Main', type: 'SEATING' },
+    { id: 'br-express', name: 'Suburb Express', type: 'SEATING' },
+    { id: 'br-takeaway', name: 'Highway Quick', type: 'TAKEAWAY' },
+  ];
 
-  const firstFloor = await prisma.floor.create({
-    data: {
-      name: 'First Floor',
-      tables: {
-        create: [
-          { number: 'F1', seats: 2, isActive: true },
-          { number: 'F2', seats: 2, isActive: true },
-          { number: 'F3', seats: 4, isActive: true },
-          { number: 'F4', seats: 4, isActive: true },
-          { number: 'F5', seats: 6, isActive: true },
-          { number: 'F6', seats: 6, isActive: true },
-          { number: 'F7', seats: 8, isActive: true },
-          { number: 'F8', seats: 4, isActive: true },
-        ],
-      },
-    },
-    include: { tables: true },
-  });
+  const allTables = [];
 
-  const allTables = [...groundFloor.tables, ...firstFloor.tables];
-  console.log(`✅ Floors: 2, Tables: ${allTables.length}`);
+  for (const b of branches) {
+    const branch = await prisma.branch.upsert({
+      where: { id: b.id },
+      update: { name: b.name, type: b.type as any },
+      create: { id: b.id, name: b.name, type: b.type as any },
+    });
+
+    if (b.type === 'TAKEAWAY') continue;
+
+    // Create unique floors for this branch
+    const floorConfigs = b.id === 'br-main' 
+      ? ['Main Dining', 'Rooftop Lounge', 'V.I.P Section']
+      : ['Ground Floor', 'Garden Terrace'];
+
+    for (const floorName of floorConfigs) {
+      const floor = await prisma.floor.create({
+        data: {
+          name: `${branch.name} - ${floorName}`,
+          branchId: branch.id,
+        }
+      });
+
+      // Create varying numbers of tables
+      const tableCount = b.id === 'br-main' ? 8 : 5;
+      for (let i = 1; i <= tableCount; i++) {
+        const prefix = floorName.charAt(0).toUpperCase();
+        const t = await prisma.table.create({
+          data: {
+            number: `${prefix}${i}`,
+            seats: pick([2, 4, 4, 6, 8]),
+            floorId: floor.id,
+          }
+        });
+        allTables.push(t);
+      }
+    }
+  }
+
+  console.log(`✅ Branches: ${branches.length}, Tables: ${allTables.length}`);
 
   // ═══════════════════════════════════════════
   // 5. POS CONFIG
@@ -697,11 +709,19 @@ async function main() {
         return sum + it.price * it.quantity * (1 + prod.tax / 100);
       }, 0);
 
+      // Get branchId for the table
+      const tableInfo = await prisma.table.findUnique({
+        where: { id: plan.table.id },
+        include: { floor: true }
+      });
+      const branchId = tableInfo?.floor.branchId;
+
       const order = await withRetry(() => prisma.order.create({
         data: {
           tableId: plan.table.id,
           sessionId: session.id,
           userId: admin.id,
+          branchId: branchId,
           status: plan.status,
           total: Math.round(orderTotal * 100) / 100,
           createdAt: orderDate,
