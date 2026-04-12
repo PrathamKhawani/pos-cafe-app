@@ -112,7 +112,7 @@ export default function PaymentMethodsPage() {
             onChange={e => setConfig({ ...config, razorpayTerminalId: e.target.value })} 
           />
           <p className="text-[10px] text-neutral-400">
-            Find this in your Razorpay Dashboard under **Settings > Terminals**.
+            Find this in your Razorpay Dashboard under **Settings &gt; Terminals**.
           </p>
         </div>
 
