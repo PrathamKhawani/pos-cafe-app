@@ -76,8 +76,11 @@ export default function BackendPage() {
     { label: "Today's Orders",  value: stats.orders,                    sub: 'transactions',       color: '#2563EB', bg: '#EFF4FF', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
     // Only ADMIN sees revenue
     ...(effectiveRole === 'ADMIN' ? [{ label: "Today's Revenue", value: `₹${stats.revenue.toFixed(0)}`, sub: 'rupees earned',       color: '#2D7A4F', bg: '#EBF7F1', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }] : []),
-    { label: 'Active Products', value: stats.products,                  sub: 'menu items',         color: '#7C5C3E', bg: '#FAF5EF', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
-    { label: 'Tables',          value: stats.tables,                    sub: 'configured seating', color: '#C8883A', bg: '#FEF6E4', icon: 'M3 10h18M3 14h18M10 3v18M14 3v18' },
+    // Only ADMIN sees products and tables stats
+    ...(effectiveRole === 'ADMIN' ? [
+      { label: 'Active Products', value: stats.products,                  sub: 'menu items',         color: '#7C5C3E', bg: '#FAF5EF', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+      { label: 'Tables',          value: stats.tables,                    sub: 'configured seating', color: '#C8883A', bg: '#FEF6E4', icon: 'M3 10h18M3 14h18M10 3v18M14 3v18' },
+    ] : []),
   ];
 
   // QUICK LINKS - Filtered securely by session role
