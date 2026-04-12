@@ -35,7 +35,7 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/branches').then(r => r.ok ? r.json() : []).then(setBranches).catch(console.error);
+    fetch('/api/branches', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(setBranches).catch(console.error);
   }, []);
 
   const load = useCallback(async () => {

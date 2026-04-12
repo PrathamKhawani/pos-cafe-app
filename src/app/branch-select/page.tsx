@@ -21,8 +21,8 @@ export default function BranchSelectPage() {
      async function loadData() {
        try {
          const [branchRes, meRes] = await Promise.all([
-           fetch('/api/branches'),
-           fetch('/api/auth/me')
+           fetch('/api/branches', { cache: 'no-store' }),
+           fetch('/api/auth/me', { cache: 'no-store' })
          ]);
          
          if (branchRes.ok) {

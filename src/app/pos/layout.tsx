@@ -15,8 +15,8 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       const branchId = document.cookie.split('; ').find(row => row.startsWith('branch-id'))?.split('=')[1];
       
       const [branchRes, meRes] = await Promise.all([
-        fetch('/api/branches'),
-        fetch('/api/auth/me')
+        fetch('/api/branches', { cache: 'no-store' }),
+        fetch('/api/auth/me', { cache: 'no-store' })
       ]);
 
       if (branchRes.ok) {

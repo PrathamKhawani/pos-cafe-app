@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 interface POSConfig {
   id: string; 
   cashEnabled: boolean; 
-  onlineEnabled: boolean;
+  digitalEnabled: boolean;
   razorpayTerminalId?: string;
 }
 
@@ -17,7 +17,7 @@ const PAYMENT_METHODS = [
     desc:  'Manual payments with cash in-hand',
   },
   {
-    key:  'onlineEnabled' as const,
+    key:  'digitalEnabled' as const,
     icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
     label: 'Online Payment (Razorpay)',
     desc:  'Automatic UPI, Cards & Netbanking via Razorpay gateway',

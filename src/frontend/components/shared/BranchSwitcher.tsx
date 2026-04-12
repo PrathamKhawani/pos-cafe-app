@@ -24,7 +24,7 @@ export default function BranchSwitcher() {
     // Load all branches
     async function loadBranches() {
       try {
-        const res = await fetch('/api/branches');
+        const res = await fetch('/api/branches', { cache: 'no-store' });
         const data = await res.json();
         if (Array.isArray(data)) {
           setBranches(data);
