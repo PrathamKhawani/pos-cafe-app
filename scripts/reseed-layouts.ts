@@ -2,6 +2,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+async function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function main() {
   console.log('🚀 Starting dynamic layout population for all branches...');
   
@@ -12,6 +16,29 @@ async function main() {
   if (!dbUrl) {
     console.error('❌ DATABASE_URL is not set in environment!');
     return;
+  }
+
+  // Connection Retry Logic for Neon "Cold Starts"
+  let connected = false;
+  let retries = 5;
+  
+  while (retries > 0 && !connected) {
+    try {
+      console.log(`⏳ Attempting to connect... (${retries} retries left)`);
+      await prisma.$connect();
+      connected = true;
+      console.log('✅ Connected to database successfully!');
+    } catch (err: any) {
+      console.warn(`⚠️  Connection failed: ${err.message}`);
+      retries--;
+      if (retries > 0) {
+        console.log('💤 Waiting 3 seconds before next attempt...');
+        await delay(3000);
+      } else {
+        console.error('❌ Failed to connect to database after multiple attempts.');
+        process.exit(1);
+      }
+    }
   }
 
   try {

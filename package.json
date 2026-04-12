@@ -15,7 +15,7 @@
     "db:seed": "prisma db seed",
     "db:push": "prisma db push",
     "socket": "node socket-server/index.js",
-    "db:reseed": "ts-node scripts/reseed-layouts.ts",
+    "db:reseed": "ts-node --transpile-only scripts/reseed-layouts.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
