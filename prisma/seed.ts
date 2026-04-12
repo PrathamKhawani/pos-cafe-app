@@ -558,49 +558,59 @@ async function main() {
   console.log(`✅ Products: ${PRODUCTS.length} (with variants)`);
 
   // ═══════════════════════════════════════════
-  // 4. BRANCHES, FLOORS & TABLES (Dynamic)
+  // 4. BRANCHES, FLOORS & TABLES (Dynamic 10 Branches)
   // ═══════════════════════════════════════════
-  console.log('🏗️  Creating Branches, Floors & Tables...');
+  console.log('🏗️  Creating 10 Premium Branches with Dynamic Layouts...');
   
-  const branches = [
-    { id: 'br-main', name: 'Downtown Main', type: 'SEATING' },
-    { id: 'br-express', name: 'Suburb Express', type: 'SEATING' },
-    { id: 'br-takeaway', name: 'Highway Quick', type: 'TAKEAWAY' },
+  const BRANCH_CONFIGS = [
+    { name: 'Downtown Cafe', type: 'SEATING', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Harbor Bistro', type: 'SEATING', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Skyline Lounge', type: 'MIXED', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Garden Terrace', type: 'SEATING', image: 'https://images.unsplash.com/photo-1533055640609-24b498dfd74c?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Urban Express', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Old Town Tavern', type: 'SEATING', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Seaside Grill', type: 'MIXED', image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800' },
+    { name: 'The Roastery', type: 'SEATING', image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Mountain Peak', type: 'SEATING', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Metro Plaza', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1481833761820-0509d3217039?auto=format&fit=crop&q=80&w=800' }
   ];
 
   const allTables = [];
 
-  for (const b of branches) {
-    const branch = await prisma.branch.upsert({
-      where: { id: b.id },
-      update: { name: b.name, type: b.type as any },
-      create: { id: b.id, name: b.name, type: b.type as any },
+  for (const b of BRANCH_CONFIGS) {
+    const branch = await prisma.branch.create({
+      data: {
+        name: b.name,
+        type: b.type as any,
+        imageUrl: b.image,
+      }
     });
 
     if (b.type === 'TAKEAWAY') continue;
 
-    // Create unique floors for this branch
-    const floorConfigs = b.id === 'br-main' 
-      ? ['Main Dining', 'Rooftop Lounge', 'V.I.P Section']
-      : ['Ground Floor', 'Garden Terrace'];
+    // Create a random number of floors (1-3)
+    const floorPool = ['Main Floor', 'Balcony', 'Outdoor Seating', 'VIP Lounge', 'Mezzanine', 'Side Garden', 'Gallery'];
+    const floorCount = Math.floor(rng() * 3) + 1; // 1 to 3 floors
+    const selectedFloors = pickN(floorPool, floorCount, floorCount);
 
-    for (const floorName of floorConfigs) {
+    for (const floorName of selectedFloors) {
       const floor = await prisma.floor.create({
         data: {
-          name: `${branch.name} - ${floorName}`,
+          name: floorName,
           branchId: branch.id,
         }
       });
 
-      // Create varying numbers of tables
-      const tableCount = b.id === 'br-main' ? 8 : 5;
+      // Create random number of tables per floor (5-12)
+      const tableCount = Math.floor(rng() * 8) + 5; 
       for (let i = 1; i <= tableCount; i++) {
         const prefix = floorName.charAt(0).toUpperCase();
         const t = await prisma.table.create({
           data: {
             number: `${prefix}${i}`,
-            seats: pick([2, 4, 4, 6, 8]),
+            seats: pick([2, 4, 4, 4, 6, 8]),
             floorId: floor.id,
+            isActive: true,
           }
         });
         allTables.push(t);
@@ -608,7 +618,7 @@ async function main() {
     }
   }
 
-  console.log(`✅ Branches: ${branches.length}, Tables: ${allTables.length}`);
+  console.log(`✅ Branches: 10, Tables: ${allTables.length}`);
 
   // ═══════════════════════════════════════════
   // 5. POS CONFIG
