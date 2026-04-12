@@ -589,7 +589,11 @@ async function main() {
     if (b.type === 'TAKEAWAY') continue;
 
     // Create a random number of floors (1-3)
-    const floorPool = ['Main Floor', 'Balcony', 'Outdoor Seating', 'VIP Lounge', 'Mezzanine', 'Side Garden', 'Gallery'];
+    const floorPool = [
+      'Grand Ballroom', 'Sunlit Terrace', 'Vintage Loft', 'Mezzanine Bar', 
+      'Library Lounge', 'Rooftop Garden', 'Secret Cellar', 'Main Atrium', 
+      'Gallery Walk', 'Sky Deck', 'Cozy Corner'
+    ];
     const floorCount = Math.floor(rng() * 3) + 1; // 1 to 3 floors
     const selectedFloors = pickN(floorPool, floorCount, floorCount);
 
@@ -602,15 +606,16 @@ async function main() {
       });
 
       // Create random number of tables per floor (5-12)
-      const tableCount = Math.floor(rng() * 8) + 5; 
+      const tableCount = Math.floor(rng() * 8) + 6; 
       for (let i = 1; i <= tableCount; i++) {
-        const prefix = floorName.charAt(0).toUpperCase();
+        const prefix = floorName.split(' ').map(w => w[0]).join('').toUpperCase();
         const t = await prisma.table.create({
           data: {
             number: `${prefix}${i}`,
-            seats: pick([2, 4, 4, 4, 6, 8]),
+            seats: pick([2, 4, 4, 4, 6, 8, 10]),
             floorId: floor.id,
             isActive: true,
+            tableType: pick(['Table', 'Booth', 'Bar', 'Table']),
           }
         });
         allTables.push(t);

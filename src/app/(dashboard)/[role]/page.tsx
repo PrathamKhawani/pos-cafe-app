@@ -13,19 +13,26 @@ export default function BackendPage() {
                    roleSegment === 'staff' ? 'CASHIER' : 
                    roleSegment === 'kitchen' ? 'KITCHEN' : '';
 
+  const [sessionUser, setSessionUser] = useState<any>(null);
   const [stats, setStats] = useState({ orders: 0, revenue: 0, products: 0, tables: 0 });
   const [pendingStaff, setPendingStaff] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect kitchen role immediately to kitchen display (removed as per user request)
-  // useEffect(() => {
-  //   if (roleSegment === 'kitchen') {
-  //     router.replace(`/${roleSegment}/kitchen-display`);
-  //   }
-  // }, [roleSegment, router]);
+  // Redirect kitchen role immediately to kitchen display
+  useEffect(() => {
+    if (roleSegment === 'kitchen') {
+      router.replace(`/${roleSegment}/kitchen-display`);
+    }
+  }, [roleSegment, router]);
 
   useEffect(() => {
     async function load() {
       try {
+        // 1. Fetch user session to get the REAL role
+        const meRes = await fetch('/api/auth/me');
+        const meData = meRes.ok ? await meRes.json() : null;
+        setSessionUser(meData);
+
         // Read the selected branch from cookie for branch-aware stats
         const branchId = document.cookie
           .split('; ')
@@ -42,6 +49,7 @@ export default function BackendPage() {
         const products = productsRes.ok ? await productsRes.json() : [];
         const tables   = tablesRes.ok   ? await tablesRes.json()   : [];
         const staff    = staffRes.ok    ? await staffRes.json()    : [];
+        
         setStats({
           orders:   (report || {}).totalOrders  || 0,
           revenue:  (report || {}).totalRevenue || 0,
@@ -52,23 +60,32 @@ export default function BackendPage() {
         if (Array.isArray(staff)) {
           setPendingStaff(staff.filter((s: any) => !s.isApproved).length);
         }
-      } catch {}
+      } catch (err) {
+        console.error('DASHBOARD_LOAD_ERROR:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
     load();
   }, []);
 
+  const effectiveRole = sessionUser?.role || '';
+  
+  // STAT CARDS - Filtered for privacy
   const statCards = [
     { label: "Today's Orders",  value: stats.orders,                    sub: 'transactions',       color: '#2563EB', bg: '#EFF4FF', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-    { label: "Today's Revenue", value: `₹${stats.revenue.toFixed(0)}`, sub: 'rupees earned',       color: '#2D7A4F', bg: '#EBF7F1', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    // Only ADMIN sees revenue
+    ...(effectiveRole === 'ADMIN' ? [{ label: "Today's Revenue", value: `₹${stats.revenue.toFixed(0)}`, sub: 'rupees earned',       color: '#2D7A4F', bg: '#EBF7F1', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }] : []),
     { label: 'Active Products', value: stats.products,                  sub: 'menu items',         color: '#7C5C3E', bg: '#FAF5EF', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
     { label: 'Tables',          value: stats.tables,                    sub: 'configured seating', color: '#C8883A', bg: '#FEF6E4', icon: 'M3 10h18M3 14h18M10 3v18M14 3v18' },
   ];
 
+  // QUICK LINKS - Filtered securely by session role
   const quickLinks = ALL_NAV_ITEMS
-    .filter(item => item.roles.includes(userRole) && item.href !== '') // Exclude Dashboard itself
+    .filter(item => item.roles.includes(effectiveRole) && item.href !== '') 
     .map(item => {
       let fullHref = item.href;
-      if (!item.href.startsWith('/pos') && !item.href.startsWith('/reports') && !item.href.startsWith('/branch-select')) {
+      if (!item.href.startsWith('/pos') && !item.href.startsWith('/reports') && !item.href.startsWith('/branch-select') && !item.href.startsWith('/kitchen-display')) {
         fullHref = `/${roleSegment}${item.href}`;
       }
       return { ...item, href: fullHref };

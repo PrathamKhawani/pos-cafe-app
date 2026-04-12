@@ -164,6 +164,42 @@ export default function FloorsPage() {
             </form>
           </div>
 
+          {/* Quick Setup / Auto-Generate */}
+          <div className="card p-5 bg-gradient-to-br from-primary-50 to-caramel-50 border-primary-100 shadow-md">
+             <div className="flex items-center gap-2.5 mb-3">
+               <div className="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center text-lg shadow-sm">⚡</div>
+               <h3 className="text-sm font-bold text-neutral-800">Branch Blueprint</h3>
+             </div>
+             <p className="text-xs text-neutral-500 font-medium leading-relaxed mb-4">
+               Instantly generate a dynamic multi-floor layout with 10-30 tables for <strong>{activeBranch?.name || 'the selected branch'}</strong>.
+             </p>
+             <button 
+               onClick={async () => {
+                 if (!selectedBranchId) return toast.error('Select a branch tab first');
+                 if (!confirm(`Warning: This will reset all existing tables in ${activeBranch?.name}. Continue?`)) return;
+                 
+                 const loading = toast.loading('Architecting layout...');
+                 try {
+                   const res = await fetch('/api/branches/initialize-layout', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ branchId: selectedBranchId })
+                   });
+                   const data = await res.json();
+                   if (data.success) {
+                     toast.success(`Success! Created ${data.floors} floors and ${data.tables} tables.`, { id: loading });
+                     load();
+                   } else { throw new Error(data.error); }
+                 } catch (e: any) {
+                   toast.error(e.message, { id: loading });
+                 }
+               }}
+               className="btn-primary w-full py-3 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+             >
+               Auto-Generate Layout
+             </button>
+          </div>
+
           {/* Add Table */}
           <div className="card p-4">
             <h3 className="text-sm font-bold text-neutral-700 mb-3 flex items-center gap-2">
