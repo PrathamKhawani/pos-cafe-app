@@ -17,7 +17,7 @@ interface POSConfig { cashEnabled: boolean; onlineEnabled: boolean; razorpayTerm
 
 export default function OrderPage({ params }: { params: { tableId: string } }) {
   const router = useRouter();
-  const { items, addItem, removeItem, clearCart, subtotal, totalTax, total, setTable, setSession, setOrderId, sessionId } = useCartStore();
+  const { items, addItem, removeItem, updateQty, clearCart, subtotal, totalTax, total, setTable, setSession, setOrderId, sessionId } = useCartStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [config, setConfig] = useState<POSConfig | null>(null);
