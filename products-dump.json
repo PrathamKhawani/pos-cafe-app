@@ -1,0 +1,737 @@
+[
+  {
+    "id": "prod-018",
+    "name": "Avocado Shake",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-005",
+    "name": "Mocha",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-006",
+    "name": "Cold Brew",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-007",
+    "name": "Caramel Macchiato",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-008",
+    "name": "Irish Coffee",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-009",
+    "name": "Classic Masala Chai",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-011",
+    "name": "Earl Grey",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-012",
+    "name": "Chamomile Infusion",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-014",
+    "name": "Iced Lemon Tea",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-015",
+    "name": "Rose Petal Tea",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-016",
+    "name": "Mixed Berry Smoothie",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-017",
+    "name": "Mango Lassi",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-019",
+    "name": "Watermelon Mint Juice",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-020",
+    "name": "Orange Juice",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-021",
+    "name": "Green Detox",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-023",
+    "name": "Sparkling Water",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-024",
+    "name": "Cola",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-025",
+    "name": "Lemonade",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-027",
+    "name": "Ginger Ale",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-028",
+    "name": "Blue Lagoon",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-031",
+    "name": "Pancake Stack",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-032",
+    "name": "Granola Bowl",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-033",
+    "name": "French Toast",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-036",
+    "name": "Croissant",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-037",
+    "name": "Bruschetta",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-039",
+    "name": "Chicken Wings (6pc)",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-040",
+    "name": "Soup of the Day",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-013",
+    "name": "Matcha Latte",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-043",
+    "name": "Nachos Grande",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-044",
+    "name": "Classic Beef Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-045",
+    "name": "Chicken Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-047",
+    "name": "Double Smash Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-049",
+    "name": "Fish Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-051",
+    "name": "Margherita",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-052",
+    "name": "Pepperoni",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-003",
+    "name": "Cappuccino",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-058",
+    "name": "Spaghetti Bolognese",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-100",
+    "name": "Fruit Platter",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-066",
+    "name": "Fish & Chips",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-062",
+    "name": "Carbonara",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-064",
+    "name": "Pesto Pasta",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-065",
+    "name": "Grilled Chicken",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-067",
+    "name": "Steak (200g)",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-068",
+    "name": "Lamb Chops",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-069",
+    "name": "Butter Chicken",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-071",
+    "name": "Thai Green Curry",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-072",
+    "name": "Seafood Risotto",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-074",
+    "name": "Greek Salad",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-075",
+    "name": "Quinoa Buddha Bowl",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-076",
+    "name": "Poke Bowl",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-078",
+    "name": "Mediterranean Bowl",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-079",
+    "name": "Club Sandwich",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-081",
+    "name": "Chicken Shawarma Wrap",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-082",
+    "name": "Falafel Wrap",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-104",
+    "name": "Tasting Platter",
+    "category": {
+      "name": "Chef's Specials"
+    }
+  },
+  {
+    "id": "prod-084",
+    "name": "Panini Caprese",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-086",
+    "name": "French Fries",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-087",
+    "name": "Sweet Potato Fries",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-089",
+    "name": "Mozzarella Sticks",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-090",
+    "name": "Loaded Potato Skins",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-092",
+    "name": "Masala Papad",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-093",
+    "name": "Chocolate Lava Cake",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-096",
+    "name": "Gelato (2 Scoops)",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-097",
+    "name": "Brownie Sundae",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-099",
+    "name": "Crème Brûlée",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-061",
+    "name": "Aglio E Olio",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-101",
+    "name": "Lobster Thermidor",
+    "category": {
+      "name": "Chef's Specials"
+    }
+  },
+  {
+    "id": "prod-103",
+    "name": "Saffron Risotto",
+    "category": {
+      "name": "Chef's Specials"
+    }
+  },
+  {
+    "id": "prod-105",
+    "name": "Truffle Mac & Cheese",
+    "category": {
+      "name": "Chef's Specials"
+    }
+  },
+  {
+    "id": "prod-035",
+    "name": "English Breakfast",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-056",
+    "name": "Hawaiian",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-057",
+    "name": "Truffle Mushroom",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-095",
+    "name": "Cheesecake",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-004",
+    "name": "Latte",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-038",
+    "name": "Garlic Bread",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-041",
+    "name": "Spring Rolls (4pc)",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-046",
+    "name": "Veggie Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-050",
+    "name": "Mushroom Swiss Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-059",
+    "name": "Penne Arrabbiata",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-063",
+    "name": "Mac & Cheese",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-070",
+    "name": "Paneer Tikka Masala",
+    "category": {
+      "name": "Main Course"
+    }
+  },
+  {
+    "id": "prod-073",
+    "name": "Caesar Salad",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-077",
+    "name": "Chicken Protein Bowl",
+    "category": {
+      "name": "Salads & Bowls"
+    }
+  },
+  {
+    "id": "prod-080",
+    "name": "Grilled Cheese",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-085",
+    "name": "Veggie Sub",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-088",
+    "name": "Onion Rings",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-091",
+    "name": "Coleslaw",
+    "category": {
+      "name": "Sides & Snacks"
+    }
+  },
+  {
+    "id": "prod-094",
+    "name": "Tiramisu",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-098",
+    "name": "Gulab Jamun",
+    "category": {
+      "name": "Desserts"
+    }
+  },
+  {
+    "id": "prod-102",
+    "name": "Wagyu Sliders (3pcs)",
+    "category": {
+      "name": "Chef's Specials"
+    }
+  },
+  {
+    "id": "prod-060",
+    "name": "Alfredo Fettuccine",
+    "category": {
+      "name": "Pasta"
+    }
+  },
+  {
+    "id": "prod-010",
+    "name": "Green Tea",
+    "category": {
+      "name": "Tea & Infusions"
+    }
+  },
+  {
+    "id": "prod-042",
+    "name": "Hummus Platter",
+    "category": {
+      "name": "Starters"
+    }
+  },
+  {
+    "id": "prod-048",
+    "name": "BBQ Bacon Burger",
+    "category": {
+      "name": "Burgers"
+    }
+  },
+  {
+    "id": "prod-022",
+    "name": "Tropical Paradise",
+    "category": {
+      "name": "Smoothies & Juices"
+    }
+  },
+  {
+    "id": "prod-026",
+    "name": "Iced Mojito (Non-Alc)",
+    "category": {
+      "name": "Soft Drinks"
+    }
+  },
+  {
+    "id": "prod-029",
+    "name": "Classic Eggs Benedict",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-034",
+    "name": "Omelette",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-055",
+    "name": "Four Cheese",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-054",
+    "name": "Veggie Supreme",
+    "category": {
+      "name": "Pizza"
+    }
+  },
+  {
+    "id": "prod-030",
+    "name": "Avocado Toast",
+    "category": {
+      "name": "Breakfast"
+    }
+  },
+  {
+    "id": "prod-002",
+    "name": "Americano",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-083",
+    "name": "BLT Sandwich",
+    "category": {
+      "name": "Sandwiches & Wraps"
+    }
+  },
+  {
+    "id": "prod-001",
+    "name": "Espresso",
+    "category": {
+      "name": "Coffee"
+    }
+  },
+  {
+    "id": "prod-053",
+    "name": "BBQ Chicken Pizza",
+    "category": {
+      "name": "Pizza"
+    }
+  }
+]
