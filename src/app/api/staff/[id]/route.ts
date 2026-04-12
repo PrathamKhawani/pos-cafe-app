@@ -8,7 +8,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload) return NextResponse.json({ error: 'Session expired.' }, { status: 401 });
+
+    // Verify live DB role — JWT can be stale after role promotion
+    const liveUser = await prisma.user.findUnique({
+      where: { id: payload.id as string },
+      select: { role: true },
+    });
+
+    const userRole = String(liveUser?.role ?? payload.role).toUpperCase();
+    if (userRole !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
     }
 
@@ -40,7 +49,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload) return NextResponse.json({ error: 'Session expired.' }, { status: 401 });
+
+    // Verify live DB role — JWT can be stale after role promotion
+    const liveUser = await prisma.user.findUnique({
+      where: { id: payload.id as string },
+      select: { role: true },
+    });
+
+    const userRole = String(liveUser?.role ?? payload.role).toUpperCase();
+    if (userRole !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
     }
 

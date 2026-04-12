@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
 import { verifyToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
-import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,30 +14,32 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Session expired. Please login again.' }, { status: 401 });
     }
 
-    // Dynamic role check (v1.2) - more resilient
-    const userRole = String(payload.role).toUpperCase();
+    // Always verify role from the live DB — JWT can be stale after a role promotion
+    const liveUser = await prisma.user.findUnique({
+      where: { id: payload.id as string },
+      select: { role: true },
+    });
+
+    const userRole = String(liveUser?.role ?? payload.role).toUpperCase();
+
     if (userRole !== 'ADMIN') {
       return NextResponse.json({ error: `Access denied. Role ${userRole} is not authorized.` }, { status: 403 });
     }
 
     const staff = await prisma.user.findMany({
       where: {
-        role: {
-          in: ['CASHIER', 'KITCHEN', 'ADMIN']
-        }
+        role: { in: ['CASHIER', 'KITCHEN', 'ADMIN'] }
       },
       select: {
-         id: true,
-         name: true,
-         username: true,
-         email: true,
-         role: true,
-         isApproved: true,
-         createdAt: true
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        role: true,
+        isApproved: true,
+        createdAt: true
       },
-      orderBy: {
-         createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json(staff);
