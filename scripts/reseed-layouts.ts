@@ -4,6 +4,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🚀 Starting dynamic layout population for all branches...');
+  
+  const dbUrl = process.env.DATABASE_URL || '';
+  const maskedUrl = dbUrl.replace(/:[^:@]+@/, ':****@');
+  console.log(`📡 Connecting to: ${maskedUrl}`);
+
+  if (!dbUrl) {
+    console.error('❌ DATABASE_URL is not set in environment!');
+    return;
+  }
 
   try {
     const branches = await prisma.branch.findMany();
