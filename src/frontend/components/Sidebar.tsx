@@ -51,9 +51,7 @@ export default function Sidebar() {
 
   const getFullHref = (href: string) => {
     if (href === '') return rolePrefix;
-    if (href.startsWith('/pos') || href.startsWith('/reports') || href.startsWith('/branch-select')) {
-      return href;
-    }
+    if (href.startsWith('/branch-select')) return href;
     return `${rolePrefix}${href}`;
   };
 

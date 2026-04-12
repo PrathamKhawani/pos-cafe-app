@@ -78,7 +78,7 @@ export async function middleware(request: NextRequest) {
 
     // 3. Branch selection enforcement
     const branchId = request.cookies.get('branch-id')?.value;
-    const isStationPath = pathname.startsWith('/pos') || pathname.startsWith('/kitchen');
+    const isStationPath = pathname.includes('/pos') || pathname.includes('/kitchen') || pathname === '/kitchen-display';
     
     if (isStationPath && !branchId && pathname !== '/branch-select') {
       return NextResponse.redirect(new URL('/branch-select', request.url));
