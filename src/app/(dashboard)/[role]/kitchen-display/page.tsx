@@ -138,7 +138,7 @@ export default function KitchenPage() {
         <div className="hidden lg:grid grid-cols-3 gap-4 h-full items-start">
           {COLS.map(c => (
             <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
-              onMove={moveStatus} onToggle={toggleItem} />
+              onMove={moveStatus} onToggle={toggleItem} isReadOnly={isReadOnly} />
           ))}
         </div>
 
@@ -146,7 +146,7 @@ export default function KitchenPage() {
         <div className="lg:hidden">
           {COLS.filter(c => c.s === activeTab).map(c => (
             <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
-              onMove={moveStatus} onToggle={toggleItem} />
+              onMove={moveStatus} onToggle={toggleItem} isReadOnly={isReadOnly} />
           ))}
         </div>
       </div>
@@ -154,11 +154,12 @@ export default function KitchenPage() {
   );
 }
 
-function KitchenColumn({ col, orders, onMove, onToggle }: {
+function KitchenColumn({ col, orders, onMove, onToggle, isReadOnly }: {
   col: typeof COLS[0];
   orders: Order[];
   onMove: (order: Order, status: string) => void;
   onToggle: (orderId: string, itemId: string, isPrepared: boolean) => void;
+  isReadOnly: boolean;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col max-h-full overflow-hidden">
