@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { useCartStore } from '@/stores/useCartStore';
 import Link from 'next/link';
+import { useDragScroll } from '@/hooks/useDragScroll';
 
 interface Product {
   id: string; name: string; price: number; tax: number; uom?: string; description?: string; isVegetarian: boolean;
@@ -12,11 +13,15 @@ interface Product {
   variants: Array<{ id: string; attribute: string; value: string; extraPrice: number }>;
 }
 interface Category { id: string; name: string; color: string; }
-interface POSConfig { cashEnabled: boolean; onlineEnabled: boolean; razorpayTerminalId?: string; }
+interface POSConfig { cashEnabled: boolean; digitalEnabled: boolean; razorpayTerminalId?: string; }
 
 
-export default function OrderPage({ params }: { params: { tableId: string } }) {
+export default function OrderPage() {
   const router = useRouter();
+  const params = useParams();
+  const tableId = params.tableId as string;
+  const role = params.role as string;
+
   const { items, addItem, removeItem, updateQty, clearCart, subtotal, totalTax, total, setTable, setSession, setOrderId, sessionId } = useCartStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -26,7 +31,7 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
   const [vegFilter, setVegFilter] = useState<'all' | 'veg' | 'nonveg'>('all');
   const [tableInfo, setTableInfo] = useState<{ number: string } | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [payMethod, setPayMethod] = useState<'CASH' | 'ONLINE'>('CASH');
+  const [payMethod, setPayMethod] = useState<'CASH' | 'DIGITAL'>('CASH');
   const [showQR, setShowQR] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,8 +39,11 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, { id: string; price: number; value: string }>>({});
 
+  const menuDrag = useDragScroll();
+  const cartDrag = useDragScroll();
+
   useEffect(() => {
-    setTable(params.tableId);
+    setTable(tableId);
     async function load() {
       try {
         const [prRes, caRes, cfRes, sessionRes, tableRes] = await Promise.all([
@@ -54,9 +62,9 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
            if (open) setSession(open.id);
         }
         
-        if (tableRes && tableRes.ok && params.tableId !== 'takeaway') {
+        if (tableRes && tableRes.ok && tableId !== 'takeaway') {
            const tableList = await tableRes.json();
-           const t = Array.isArray(tableList) ? tableList.find((tt: any) => tt.id === params.tableId) : null;
+           const t = Array.isArray(tableList) ? tableList.find((tt: any) => tt.id === tableId) : null;
            if (t) setTableInfo(t);
         }
       } catch (e) {
@@ -64,7 +72,7 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       }
     }
     load();
-  }, []);
+  }, [tableId, setTable, setSession]);
 
   // Sync Cart with Customer Display
   useEffect(() => {
@@ -72,12 +80,12 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       try {
         const { io } = await import('socket.io-client');
         const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        socket.emit('ORDER_UPDATE', { tableId: params.tableId, items, total: total() });
+        socket.emit('ORDER_UPDATE', { tableId: tableId, items, total: total() });
         setTimeout(() => socket.disconnect(), 1000);
       } catch {}
     }
     sync();
-  }, [items, total()]);
+  }, [items, total, tableId]);
 
   const filtered = Array.isArray(products) ? products.filter(p =>
     (activeCat === 'all' || p?.category?.id === activeCat) &&
@@ -120,7 +128,7 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       const res = await fetch('/api/orders', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          tableId: params.tableId === 'takeaway' ? undefined : params.tableId, 
+          tableId: tableId === 'takeaway' ? undefined : tableId, 
           sessionId, 
           items: items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity, price: i.price, tax: i.tax })) 
         })
@@ -150,7 +158,6 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
 
     setLoading(true);
 
-    // If Razorpay Terminal is configured, we can push to hardware
     if (config?.razorpayTerminalId) {
       try {
         const res = await fetch('/api/razorpay/terminal', {
@@ -161,10 +168,9 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
         const data = await res.json();
         if (data.success) {
           toast.success('Payment request sent to Terminal');
-          // Emit socket for Customer Display to show "Paying on Terminal"
           const { io } = await import('socket.io-client');
           const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-          socket.emit('PAYMENT_REQUEST', { tableId: params.tableId, orderId, total: total(), method: 'TERMINAL' });
+          socket.emit('PAYMENT_REQUEST', { tableId: tableId, orderId, total: total(), method: 'TERMINAL' });
           return;
         }
       } catch (err) {
@@ -172,7 +178,6 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       }
     }
 
-    // Fallback or explicit Web Checkout
     try {
       const res = await fetch('/api/razorpay/order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -183,7 +188,7 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       
       if (!razorpayKey || razorpayKey.includes('placeholder')) {
         toast.error('Razorpay test mode active (requires valid keys)');
-        setTimeout(confirmPay, 1000); // fallback for local testing without keys
+        setTimeout(confirmPay, 1000);
         return;
       }
 
@@ -239,11 +244,9 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
       setTimeout(() => { 
         setShowThankYou(false); 
         setOrderIdState(null); 
-        router.push(params.tableId === 'takeaway' ? '/pos/takeaway' : '/pos/floor'); 
+        router.push(tableId === 'takeaway' ? `/${role}/pos/takeaway` : `/${role}/pos/floor`); 
       }, 2500);
   }
-
-  const canPay = config?.cashEnabled || config?.onlineEnabled;
 
   return (
     <div className="flex h-[calc(100vh-60px)] bg-[#F5F3EF] overflow-hidden animate-fade-in font-sans">
@@ -253,19 +256,18 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
         {/* Top Bar Navigation */}
         <div className="bg-white px-6 py-4 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push(params.tableId === 'takeaway' ? '/pos/takeaway' : '/pos/floor')} className="w-10 h-10 rounded-xl bg-neutral-100 text-neutral-500 hover:text-neutral-800 hover:bg-neutral-200 flex items-center justify-center transition-colors">
+            <button onClick={() => router.push(tableId === 'takeaway' ? `/${role}/pos/takeaway` : `/${role}/pos/floor`)} className="w-10 h-10 rounded-xl bg-neutral-100 text-neutral-500 hover:text-neutral-800 hover:bg-neutral-200 flex items-center justify-center transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </button>
             <div>
               <h2 className="text-xl font-bold text-neutral-800 leading-tight">
-                {params.tableId === 'takeaway' ? 'Express Takeaway' : `Table ${tableInfo?.number || params.tableId}`}
+                {tableId === 'takeaway' ? 'Express Takeaway' : `Table ${tableInfo?.number || tableId}`}
               </h2>
               <p className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mt-0.5">Order Terminal</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4 shrink-0">
-            {/* Veg/Non-Veg Filter */}
             <div className="flex bg-neutral-100 p-1 rounded-xl border border-neutral-200 shadow-sm shrink-0">
               <button onClick={() => setVegFilter('all')}
                 className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${vegFilter === 'all' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'}`}>
@@ -307,14 +309,17 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
         </div>
 
         {/* Product Grid */}
-        <div className="flex-1 overflow-y-auto min-h-0 h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar">
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
+        <div 
+          ref={menuDrag.ref}
+          onMouseDown={menuDrag.onMouseDown}
+          className="flex-1 overflow-y-auto min-h-0 h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+        >
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24 pointer-events-none group-drag:pointer-events-none [&>*]:pointer-events-auto">
             {filtered.map((product) => (
               <div 
                 key={product.id} 
                 className="group relative bg-white rounded-3xl border border-neutral-200 shadow-sm hover:shadow-xl hover:border-primary-200 transition-all duration-300 overflow-hidden flex flex-col h-full"
               >
-                {/* Image / Placeholder */}
                 <div className="aspect-[4/3] w-full bg-neutral-100 relative overflow-hidden shrink-0">
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -331,7 +336,6 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
                   )}
                 </div>
 
-                {/* Content */}
                 <div className="p-4 flex flex-col flex-1">
                    <div className="font-bold text-neutral-800 text-sm md:text-base leading-tight mb-2 line-clamp-2 min-h-[2.5rem]">
                       <span className={`flex-shrink-0 inline-flex items-center justify-center w-3 h-3 rounded-sm border ${product.isVegetarian ? 'border-green-600 bg-white' : 'border-red-600 bg-white'} mr-2 align-middle relative top-[-1px]`}>
@@ -353,22 +357,12 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
                 </div>
               </div>
             ))}
-            
-            {filtered.length === 0 && (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center">
-                <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center text-3xl mb-4 border border-neutral-200">🔍</div>
-                <p className="font-bold text-neutral-500 tracking-wide">No items found in this category</p>
-                <button onClick={() => setSearch('')} className="text-primary-600 font-bold text-sm mt-2 hover:underline">Clear search</button>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       {/* Right: Cart Area */}
       <div className="w-full max-w-[360px] md:max-w-[420px] flex flex-col bg-white border-l border-neutral-200 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] shrink-0">
-        
-        {/* Cart Header */}
         <div className="p-6 border-b border-neutral-100 bg-white shrink-0 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black text-neutral-800 tracking-tight">Current Cart</h2>
@@ -386,7 +380,11 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
         </div>
 
         {/* Cart Items List */}
-        <div className="flex-1 overflow-y-auto min-h-0 h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar">
+        <div 
+          ref={cartDrag.ref}
+          onMouseDown={cartDrag.onMouseDown}
+          className="flex-1 overflow-y-auto min-h-0 h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+        >
           {items.map(item => (
             <div key={`${item.productId}-${item.variantId}`} className="flex flex-col gap-4 p-5 rounded-[2rem] bg-white border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
                <div className="flex justify-between items-start gap-4">
@@ -420,16 +418,8 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
                </div>
             </div>
           ))}
-          
-          {items.length === 0 && (
-            <div className="text-center py-24 flex flex-col items-center">
-              <div className="w-24 h-24 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center text-5xl opacity-40 mb-5 border border-neutral-100 shadow-inner">🛒</div>
-              <p className="text-xs font-black text-neutral-300 uppercase tracking-[0.3em]">Empty Cart</p>
-            </div>
-          )}
         </div>
 
-        {/* Checkout Summary */}
         <div className="bg-white border-t border-neutral-200 p-8 shrink-0 shadow-[0_-20px_50px_rgba(0,0,0,0.05)] z-10">
           <div className="space-y-4 mb-8 px-1">
             <div className="flex justify-between items-center">
@@ -486,7 +476,7 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
             <div className="space-y-3 mb-6">
               {[
                 { id: 'CASH', label: 'Cash Payment', icon: '💵', enabled: config?.cashEnabled },
-                { id: 'ONLINE', label: 'Online Payment', icon: '💳', enabled: config?.onlineEnabled },
+                { id: 'DIGITAL', label: 'Online Payment', icon: '💳', enabled: config?.digitalEnabled },
               ].filter(m => m.enabled).map((m) => (
                 <button 
                   key={m.id}
@@ -500,7 +490,6 @@ export default function OrderPage({ params }: { params: { tableId: string } }) {
               ))}
             </div>
 
-            
             <button onClick={handlePay} disabled={loading} className="btn-primary w-full py-4 text-base tracking-wide">
               {loading ? 'Processing...' : `Confirm ${payMethod} Payment`}
             </button>

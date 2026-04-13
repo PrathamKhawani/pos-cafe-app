@@ -17,7 +17,7 @@
     --text-subtle:    #A89880;
     --border:         #E5DDD3;
     --border-strong:  #CFC4B4;
-    scroll-behavior: initial !important;
+    scroll-behavior: smooth;
   }
 }
 
@@ -29,7 +29,7 @@
   }
 
   html {
-    scroll-behavior: initial !important;
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     font-size: 14px;
     background-color: var(--bg-page);
@@ -396,7 +396,7 @@
 
   /* Premium custom scrollbar for the cart and lists */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;

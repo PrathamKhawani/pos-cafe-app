@@ -71,7 +71,11 @@ export default function BackendPage() {
     load();
   }, []);
 
-  const effectiveRole = sessionUser?.role || '';
+  const roleFromUrl = roleSegment === 'admin' ? 'ADMIN' : 
+                    roleSegment === 'staff' ? 'CASHIER' : 
+                    roleSegment === 'kitchen' ? 'KITCHEN' : '';
+
+  const effectiveRole = sessionUser?.role || roleFromUrl;
   
   // STAT CARDS - Filtered for privacy
   const statCards = [
@@ -90,8 +94,8 @@ export default function BackendPage() {
     .filter(item => item.roles.includes(effectiveRole) && item.href !== '') 
     .map(item => {
       let fullHref = item.href;
-      // Only /pos and /branch-select are actually mounted at the root directory
-      if (!item.href.startsWith('/pos') && !item.href.startsWith('/branch-select')) {
+      // Only /branch-select is actually mounted at the root directory
+      if (!item.href.startsWith('/branch-select')) {
         fullHref = `/${roleSegment}${item.href}`;
       }
       return { ...item, href: fullHref };

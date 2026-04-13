@@ -2,6 +2,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
+import { useParams, useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -18,6 +19,8 @@ const COLS = [
 export default function KitchenPage() {
   const [activeTab, setActiveTab] = useState('SENT');
   const { data: sentData } = useSWR('/api/orders?status=SENT', fetcher);
+  const { role: urlRole } = useParams() as { role: string };
+  const isReadOnly = urlRole === 'staff';
   const { data: preparingData } = useSWR('/api/orders?status=PREPARING', fetcher);
   const { data: readyData } = useSWR('/api/orders?status=READY&limit=20', fetcher);
 
@@ -188,8 +191,10 @@ function KitchenColumn({ col, orders, onMove, onToggle }: {
             </div>
             <div className="p-3 space-y-1.5">
               {o.items.map((item: OrderItem) => (
-                <div key={item.id} onClick={() => onToggle(o.id, item.id, item.isPrepared)}
-                     className={`p-2 rounded-lg border cursor-pointer transition-colors ${
+                <div key={item.id} onClick={() => !isReadOnly && onToggle(o.id, item.id, item.isPrepared)}
+                     className={`p-2 rounded-lg border transition-colors ${
+                       isReadOnly ? 'cursor-default' : 'cursor-pointer'
+                     } ${
                        item.isPrepared ? 'bg-slate-50 border-transparent opacity-50' : 'bg-white border-slate-100 hover:border-slate-300'
                      }`}>
                   <div className="flex items-start gap-2.5">
@@ -210,11 +215,13 @@ function KitchenColumn({ col, orders, onMove, onToggle }: {
                 </div>
               ))}
             </div>
-            <button onClick={() => onMove(o, col.next)}
-              className="w-full py-2.5 text-white font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0"
-              style={{ background: col.color }}>
-              {col.btn}
-            </button>
+            {!isReadOnly && (
+              <button onClick={() => onMove(o, col.next)}
+                className="w-full py-2.5 text-white font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0"
+                style={{ background: col.color }}>
+                {col.btn}
+              </button>
+            )}
           </div>
         ))}
         {orders.length === 0 && (

@@ -63,7 +63,7 @@ export default function SelfCartPage() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               internalOrderId: order.id,
-              method: 'ONLINE',
+              method: 'DIGITAL',
               amount: grandTotal,
             }),
           });

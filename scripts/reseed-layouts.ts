@@ -1,45 +1,32 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import ws from 'ws';
 
-const prisma = new PrismaClient();
+// Required for terminal/Node environments to use WebSockets with Neon
+neonConfig.webSocketConstructor = ws;
+
+const dbUrl = process.env.DATABASE_URL || '';
 
 async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main() {
-  console.log('🚀 Starting dynamic layout population for all branches...');
+  console.log('🚀 Starting dynamic layout population (Serverless Mode)...');
   
-  const dbUrl = process.env.DATABASE_URL || '';
-  const maskedUrl = dbUrl.replace(/:[^:@]+@/, ':****@');
-  console.log(`📡 Connecting to: ${maskedUrl}`);
-
   if (!dbUrl) {
     console.error('❌ DATABASE_URL is not set in environment!');
     return;
   }
 
-  // Connection Retry Logic for Neon "Cold Starts"
-  let connected = false;
-  let retries = 5;
-  
-  while (retries > 0 && !connected) {
-    try {
-      console.log(`⏳ Attempting to connect... (${retries} retries left)`);
-      await prisma.$connect();
-      connected = true;
-      console.log('✅ Connected to database successfully!');
-    } catch (err: any) {
-      console.warn(`⚠️  Connection failed: ${err.message}`);
-      retries--;
-      if (retries > 0) {
-        console.log('💤 Waiting 3 seconds before next attempt...');
-        await delay(3000);
-      } else {
-        console.error('❌ Failed to connect to database after multiple attempts.');
-        process.exit(1);
-      }
-    }
-  }
+  const maskedUrl = dbUrl.replace(/:[^:@]+@/, ':****@');
+  console.log(`📡 Connecting via HTTPS/WebSockets to: ${maskedUrl}`);
+
+  // Initialize Neon Adapter
+  const pool = new Pool({ connectionString: dbUrl });
+  const adapter = new PrismaNeon(pool);
+  const prisma = new PrismaClient({ adapter });
 
   try {
     const branches = await prisma.branch.findMany();
@@ -97,6 +84,7 @@ async function main() {
     console.error('\n❌ Error during population:', error.message);
   } finally {
     await prisma.$disconnect();
+    await pool.end();
   }
 }
 

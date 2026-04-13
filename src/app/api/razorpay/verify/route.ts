@@ -4,9 +4,9 @@ import { prisma } from '@/backend/database/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const { 
-      razorpay_order_id, 
-      razorpay_payment_id, 
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
       razorpay_signature,
       internalOrderId,
       method,
@@ -28,19 +28,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment signature mismatch' }, { status: 400 });
     }
 
-    // Update database
+    // Coerce 'ONLINE' to 'DIGITAL' to match Prisma Enum
+    const dbMethod = (method === 'ONLINE' ? 'DIGITAL' : method) || 'DIGITAL';
+
+    // Update database in transaction
     await prisma.$transaction([
       prisma.payment.upsert({
         where: { orderId: internalOrderId },
         create: {
           orderId: internalOrderId,
-          method: method || 'DIGITAL',
+          method: dbMethod as any,
           amount: amount
         },
         update: {
-          method: method || 'DIGITAL',
+          method: dbMethod as any,
           amount: amount
         }
+      }),
+      // Mark order as PAID
+      prisma.order.update({
+        where: { id: internalOrderId },
+        data: { status: 'PAID' }
       })
     ]);
 

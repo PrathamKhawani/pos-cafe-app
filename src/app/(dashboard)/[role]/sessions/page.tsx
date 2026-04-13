@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface Session {
@@ -11,6 +11,8 @@ interface Session {
 
 export default function SessionsPage() {
   const router = useRouter();
+  const params = useParams();
+  const role = params.role as string;
   const [sessions,      setSessions]      = useState<Session[]>([]);
   const [openingCash,   setOpeningCash]   = useState('0');
   const [loading,       setLoading]       = useState(false);
@@ -36,7 +38,7 @@ export default function SessionsPage() {
       if (!res.ok) { toast.error(session.error || 'Failed to open session'); return; }
       toast.success('Session opened');
       setActiveSession(session);
-      router.push('/pos/floor');
+      router.push(`/${role}/pos/floor`);
     } catch { toast.error('Failed to open session'); }
     finally { setLoading(false); }
   }
@@ -66,7 +68,7 @@ export default function SessionsPage() {
           </p>
         </div>
         {activeSession && (
-          <button className="btn-primary" onClick={() => router.push('/pos/floor')}>
+          <button className="btn-primary" onClick={() => router.push(`/${role}/pos/floor`)}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -110,7 +112,7 @@ export default function SessionsPage() {
               </div>
 
               <div className="flex gap-2">
-                <button className="btn-primary flex-1" onClick={() => router.push('/pos/floor')}>
+                <button className="btn-primary flex-1" onClick={() => router.push(`/${role}/pos/floor`)}>
                   Open POS Terminal
                 </button>
                 <button className="btn-danger" onClick={closeSession}>

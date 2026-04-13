@@ -1,12 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   const [branch, setBranch] = useState<{ name: string } | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const role = params.role as string;
+  const rolePrefix = `/${role}`;
 
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -20,7 +23,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       ]);
 
       if (branchRes.ok) {
-        const branches = await branchRes.ok ? await branchRes.json() : [];
+        const branches = await branchRes.json();
         if (branchId) setBranch(branches.find((b: any) => b.id === branchId));
       }
 
@@ -31,8 +34,6 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
     }
     loadData();
   }, []);
-
-  const rolePrefix = userRole === 'CASHIER' ? '/staff' : userRole === 'KITCHEN' ? '/kitchen' : '/admin';
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -56,7 +57,7 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
           <nav className="flex items-center gap-1 p-1 bg-neutral-50 rounded-lg border border-neutral-200">
-            <Link href="/pos/floor" className="px-3 py-1.5 rounded-md text-xs font-semibold text-neutral-700 hover:bg-white hover:shadow-sm transition-all flex items-center gap-1.5">
+            <Link href={`${rolePrefix}/pos/floor`} className="px-3 py-1.5 rounded-md text-xs font-semibold text-neutral-700 hover:bg-white hover:shadow-sm transition-all flex items-center gap-1.5">
               <span>🪑</span> Floor View
             </Link>
             <Link href={`${rolePrefix}/kitchen-display`} target="_blank" className="px-3 py-1.5 rounded-md text-xs font-semibold text-neutral-700 hover:bg-white hover:shadow-sm transition-all flex items-center gap-1.5">

@@ -66,10 +66,17 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Admin-Only Module Protection (Regardless of whether it's /admin/xxx or /staff/xxx)
-    const adminOnlyModules = ['branches', 'floors', 'categories', 'products', 'qr-print', 'staff', 'reports', 'payment-methods', 'sessions'];
+    const adminOnlyModules = ['branches', 'floors', 'categories', 'products', 'qr-print', 'staff', 'reports'];
+    const staffAllowedModules = ['sessions', 'payment-methods'];
     const currentModule = pathSegments[1];
     
+    // Admin only check
     if (isDashboardPath && adminOnlyModules.includes(currentModule) && payload.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+    }
+
+    // Staff allowed modules check (exclude Kitchen from these)
+    if (isDashboardPath && staffAllowedModules.includes(currentModule) && !['ADMIN', 'CASHIER'].includes(payload.role)) {
         return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 
