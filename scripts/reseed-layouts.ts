@@ -35,9 +35,14 @@ async function main() {
     for (const branch of branches) {
       console.log(`\n🏗️  Processing branch: ${branch.name} (${branch.id})`);
 
-      // 1. Clean existing floors/tables
-      const deletedFloors = await prisma.floor.deleteMany({ where: { branchId: branch.id } });
-      console.log(`   - Cleaned up ${deletedFloors.count} existing floors.`);
+      // 1. Check if floors already exist to avoid data loss
+      const existingFloorCount = await prisma.floor.count({ where: { branchId: branch.id } });
+      if (existingFloorCount > 0) {
+        console.log(`   - Skipping branch ${branch.name} (already has ${existingFloorCount} floors). Use --force if you want to reset.`);
+        continue;
+      }
+
+      console.log(`   - Populating new layout for branch...`);
 
       // 2. Generate Dynamic Layout
       const floorPool = [

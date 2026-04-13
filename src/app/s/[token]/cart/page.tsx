@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useSelfOrder } from '../context';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function SelfCartPage() {
   const { cart, removeFromCart, updateQuantity, updateNote, clearCart, table, token,
     cartCount, subtotal, totalTax, grandTotal, setLastOrderId } = useSelfOrder();
+  const { emit } = useSocket();
   const router = useRouter();
   const [placing, setPlacing] = useState(false);
   const [expandedNote, setExpandedNote] = useState<string | null>(null);
@@ -69,6 +71,7 @@ export default function SelfCartPage() {
           });
 
           if (verifyRes.ok) {
+            emit('NEW_ORDER', { orderId: order.id, tableNumber: table?.number || 'TA' });
             clearCart();
             setLastOrderId(order.id);
             router.push(`/s/${token}/confirmation?orderId=${order.id}&total=${grandTotal.toFixed(0)}`);

@@ -55,8 +55,9 @@ export async function middleware(request: NextRequest) {
     const firstSegment = pathSegments[0];
     const isDashboardPath = ['admin', 'staff', 'kitchen'].includes(firstSegment);
 
-    // If on a first-segment dashboard path, ensure it matches the user's role EXACTLY
-    if (isDashboardPath && firstSegment !== allowedSegment) {
+    // If on a first-segment dashboard path, ensure it matches the user's role
+    // SUPERUSER EXCEPTION: Admins can visit any dashboard path
+    if (isDashboardPath && firstSegment !== allowedSegment && payload.role !== 'ADMIN') {
         return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 

@@ -75,7 +75,8 @@ export default function BackendPage() {
                     roleSegment === 'staff' ? 'CASHIER' : 
                     roleSegment === 'kitchen' ? 'KITCHEN' : '';
 
-  const effectiveRole = sessionUser?.role || roleFromUrl;
+  // If user is ADMIN, they can "impersonate" another role's dashboard by visiting its URL
+  const effectiveRole = sessionUser?.role === 'ADMIN' ? roleFromUrl : (sessionUser?.role || roleFromUrl);
   
   // STAT CARDS - Filtered for privacy
   const statCards = [

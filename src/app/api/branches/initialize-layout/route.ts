@@ -12,8 +12,13 @@ export async function POST(req: Request) {
     const branch = await prisma.branch.findUnique({ where: { id: branchId } });
     if (!branch) return NextResponse.json({ error: 'Branch not found' }, { status: 404 });
 
-    // 1. Clean existing floors/tables for this branch
-    await prisma.floor.deleteMany({ where: { branchId } });
+    // 1. Check if floors already exist to avoid accidental data loss
+    const existingFloorsCount = await prisma.floor.count({ where: { branchId } });
+    if (existingFloorsCount > 0) {
+      return NextResponse.json({ 
+        error: 'Branch already has floors configured. Please delete them manually first to reset the layout.' 
+      }, { status: 400 });
+    }
 
     // 2. Generate Dynamic Layout
     const floorPool = [
