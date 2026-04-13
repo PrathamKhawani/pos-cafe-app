@@ -6,7 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const { method, amount } = await req.json();
     // Start transaction to update order and create payment
-    const [order, payment] = await prisma.$transaction(async (tx) => {
+    const [order, payment] = await prisma.$transaction(async (tx: any) => {
       // 1. Fetch current status
       const current = await tx.order.findUnique({ where: { id: params.id } });
       

@@ -1,8 +1,7 @@
-
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/backend/database/prisma';
 import { NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
+
 
 export async function GET() {
   try {
@@ -53,7 +52,5 @@ export async function GET() {
   } catch (error: any) {
     console.error('Setup failed:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

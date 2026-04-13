@@ -46,7 +46,7 @@ export async function PUT() {
     }
 
     const created = await prisma.$transaction(
-      tablesWithoutQR.map(t =>
+      tablesWithoutQR.map((t: any) =>
         prisma.qRToken.create({
           data: { tableId: t.id },
           include: { table: { include: { floor: { include: { branch: true } } } } },

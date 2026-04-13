@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     // Always verify role from the live DB — JWT can be stale after a role promotion
     const liveUser = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: { id: payload.userId as string },
       select: { role: true },
     });
 
