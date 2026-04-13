@@ -30,8 +30,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     }
 
     // Calculate tax breakdown
-    const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const taxItems = order.items.map(item => ({
+    const subtotal = order.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+    const taxItems = order.items.map((item: any) => ({
       name: item.product.name,
       variant: item.variant ? `${item.variant.attribute}: ${item.variant.value}` : null,
       quantity: item.quantity,
@@ -42,7 +42,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       isVegetarian: item.product.isVegetarian,
     }));
 
-    const totalTax = taxItems.reduce((sum, item) => sum + item.taxAmount, 0);
+    const totalTax = taxItems.reduce((sum: number, item: any) => sum + item.taxAmount, 0);
     const cgst = totalTax / 2;
     const sgst = totalTax / 2;
 
