@@ -22,7 +22,7 @@ export default function OrderPage() {
   const tableId = params.tableId as string;
   const role = params.role as string;
 
-  const { items, addItem, removeItem, updateQty, clearCart, subtotal, totalTax, total, setTable, setSession, setOrderId, sessionId } = useCartStore();
+  const { items, addItem, removeItem, updateQty, updateNote, clearCart, subtotal, totalTax, total, setTable, setSession, setOrderId, sessionId } = useCartStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [config, setConfig] = useState<POSConfig | null>(null);
@@ -130,7 +130,7 @@ export default function OrderPage() {
         body: JSON.stringify({ 
           tableId: tableId === 'takeaway' ? undefined : tableId, 
           sessionId, 
-          items: items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity, price: i.price, tax: i.tax })) 
+          items: items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity, price: i.price, tax: i.tax, note: i.note })) 
         })
       });
       const order = await res.json();
@@ -312,9 +312,9 @@ export default function OrderPage() {
         <div 
           ref={menuDrag.ref}
           onMouseDown={menuDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
         >
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24 pointer-events-none group-drag:pointer-events-none [&>*]:pointer-events-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
             {filtered.map((product) => (
               <div 
                 key={product.id} 
@@ -383,7 +383,7 @@ export default function OrderPage() {
         <div 
           ref={cartDrag.ref}
           onMouseDown={cartDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
         >
           {items.map(item => (
             <div key={`${item.productId}-${item.variantId}`} className="flex flex-col gap-4 p-5 rounded-[2rem] bg-white border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
@@ -415,6 +415,17 @@ export default function OrderPage() {
                   <button onClick={() => removeItem(item.productId, item.variantId)} className="w-12 h-12 flex items-center justify-center text-neutral-200 hover:text-red-500 transition-colors">
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
+               </div>
+               
+               <div className="pt-2 border-t border-neutral-50 mt-1">
+                 <input 
+                   type="text" 
+                   onMouseDown={(e) => e.stopPropagation()} /* Prevents drag when interacting with input */
+                   placeholder="Add special instructions..." 
+                   className="w-full text-[11px] font-semibold bg-neutral-50 border border-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-primary-300 text-neutral-700 placeholder:text-neutral-400 focus:bg-white transition-colors"
+                   value={item.note || ''}
+                   onChange={(e) => updateNote(item.productId, item.variantId || undefined, e.target.value)}
+                 />
                </div>
             </div>
           ))}

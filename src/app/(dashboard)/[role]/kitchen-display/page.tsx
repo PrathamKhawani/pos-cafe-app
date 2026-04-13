@@ -18,11 +18,11 @@ const COLS = [
 
 export default function KitchenPage() {
   const [activeTab, setActiveTab] = useState('SENT');
-  const { data: sentData } = useSWR('/api/orders?status=SENT', fetcher);
+  const { data: sentData } = useSWR('/api/orders?status=SENT', fetcher, { refreshInterval: 3000 });
   const { role: urlRole } = useParams() as { role: string };
   const isReadOnly = urlRole === 'staff';
-  const { data: preparingData } = useSWR('/api/orders?status=PREPARING', fetcher);
-  const { data: readyData } = useSWR('/api/orders?status=READY&limit=20', fetcher);
+  const { data: preparingData } = useSWR('/api/orders?status=PREPARING', fetcher, { refreshInterval: 3000 });
+  const { data: readyData } = useSWR('/api/orders?status=READY&limit=20', fetcher, { refreshInterval: 3000 });
 
   const orders = useMemo(() => {
     const combined = [

@@ -57,12 +57,7 @@ export async function middleware(request: NextRequest) {
 
     // If on a first-segment dashboard path, ensure it matches the user's role EXACTLY
     if (isDashboardPath && firstSegment !== allowedSegment) {
-        // SPECIAL CASE: Allow ADMIN to visit staff/kitchen panels if needed? 
-        // User said: "only admin should have all modules access not staff and kitchen they should have their required modules only"
-        // This implies Staff and Kitchen are restricted. Admin is special.
-        if (payload.role !== 'ADMIN') {
-            return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
-        }
+        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 
     // 3. Admin-Only Module Protection (Regardless of whether it's /admin/xxx or /staff/xxx)
@@ -81,7 +76,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Role-specific sub-routes
-    if (pathname.startsWith('/kitchen-display') && !['ADMIN', 'KITCHEN', 'CASHIER'].includes(payload.role)) {
+    if (pathname.includes('/kitchen-display') && !['ADMIN', 'KITCHEN', 'CASHIER'].includes(payload.role)) {
         return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
     }
 

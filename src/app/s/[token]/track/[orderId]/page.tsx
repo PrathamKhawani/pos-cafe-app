@@ -123,15 +123,16 @@ export default function TrackPage({ params }: { params: { token: string; orderId
           className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 text-center relative overflow-hidden"
         >
           {/* Estimated Time Badge */}
-          {(!isPaid && order.status !== 'DELIVERED') && (
+          {(order.status !== 'DELIVERED' && order.status !== 'CANCELLED') && (
             <div className="absolute top-4 right-4 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
               <svg className="w-3.5 h-3.5 text-black animate-spin-slow" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               <span className="text-[10px] font-extrabold text-black uppercase tracking-widest">
                 ETA: {
-                  order.status === 'SENT' ? 15 + Math.floor(order.items.length / 2) * 2
-                  : order.status === 'PREPARING' ? 8 + Math.floor(order.items.filter(i => !i.isPrepared).length / 2) * 2
-                  : order.status === 'READY' ? 2
-                  : 0
+                  (() => {
+                    const unpreparedCount = order.items.filter(i => !i.isPrepared).reduce((sum, i) => sum + i.quantity, 0);
+                    const baseTime = ['SENT', 'PAID', 'PENDING'].includes(order.status) ? 12 : (order.status === 'PREPARING' ? 6 : 2);
+                    return baseTime + (unpreparedCount * 2);
+                  })()
                 } MIN
               </span>
             </div>
