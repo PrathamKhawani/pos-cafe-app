@@ -37,7 +37,7 @@ export async function GET() {
     return NextResponse.json({ 
       success: true, 
       message: `Updated ${updatedCount} products with high-quality images.`,
-      foundProducts: products.map(p => p.name)
+      foundProducts: products.map((p: any) => p.name)
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -708,7 +708,7 @@ async function main() {
 
   // Pre-compute all order data (no DB calls yet)
   interface OrderPlan {
-    table: typeof allTables[0];
+    table: any; // Using any for simplicity in seeder to avoid complex Prisma include types
     orderProducts: typeof PRODUCTS;
     daysAgo: number;
     hoursOffset: number;
@@ -778,9 +778,9 @@ async function main() {
       if (plan.status === 'PAID') {
         await withRetry(() => prisma.payment.create({
           data: {
-            orderId: order.id,
+            orderId: (order as any).id,
             method: plan.payMethod,
-            amount: order.total,
+            amount: (order as any).total,
             paidAt: orderDate,
           },
         }));
