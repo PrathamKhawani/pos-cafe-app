@@ -742,15 +742,15 @@ async function main() {
       orderDate.setDate(orderDate.getDate() - plan.daysAgo);
       orderDate.setHours(plan.hoursOffset, plan.minutes, 0, 0);
 
-      const items = plan.orderProducts.map(p => ({
+      const items = plan.orderProducts.map((p: any) => ({
         productId: p.id,
         quantity: 1 + Math.floor(rng() * 3),
         price: p.price,
         isPrepared: true,
       }));
 
-      const orderTotal = items.reduce((sum, it) => {
-        const prod = PRODUCTS.find(p => p.id === it.productId)!;
+      const orderTotal = items.reduce((sum: number, it: any) => {
+        const prod = PRODUCTS.find((p: any) => p.id === it.productId)!;
         return sum + it.price * it.quantity * (1 + prod.tax / 100);
       }, 0);
 

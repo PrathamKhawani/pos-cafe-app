@@ -80,9 +80,10 @@ export async function POST(req: NextRequest) {
     const validatedData = orderSchema.parse(body);
 
     const total = validatedData.items.reduce(
-      (sum, item) => sum + (item.price * item.quantity * (1 + (item.tax || 0) / 100)),
+      (sum: number, item: any) => sum + (item.price * item.quantity * (1 + (item.tax || 0) / 100)),
       0
     );
+
 
     const order = await prisma.order.create({
       data: {
