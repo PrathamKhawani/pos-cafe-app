@@ -30,7 +30,7 @@ export default function KitchenPage() {
       ...(preparingData?.orders || []),
       ...(readyData?.orders || [])
     ];
-    return combined.sort((a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return combined.sort((a: Order, b: Order) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }, [sentData, preparingData, readyData]);
 
   const onSocketEvent = useCallback((event: string) => {
@@ -174,7 +174,7 @@ function KitchenColumn({ col, orders, onMove, onToggle, isReadOnly }: {
             <div className="p-3 border-b border-slate-100 bg-slate-50 flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-slate-500 font-semibold">{o.table?.floor ? (o.table.floor.branch?.name ? `${o.table.floor.branch.name} - ${o.table.floor.name}` : o.table.floor.name) : 'Takeaway'}</span>
+                  <span className="text-xs text-slate-500 font-semibold">{o.table?.floor ? (o.table.floor.branch?.name ? `${o.table.floor.branch.name} - ${o.table.floor.name}` : o.table.floor.name) : <span className="text-orange-600 font-bold px-1.5 py-0.5 bg-orange-50 rounded border border-orange-100 uppercase text-[9px]">Takeaway</span>}</span>
                   {o.isQrOrder && (
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-600 uppercase tracking-tight">QR</span>
                   )}
@@ -183,7 +183,7 @@ function KitchenColumn({ col, orders, onMove, onToggle, isReadOnly }: {
                   )}
                 </div>
                 <div className="text-sm sm:text-base font-bold text-slate-800">
-                  {o.table ? `Table ${o.table.number}` : 'Takeaway Order'}
+                  {o.table ? `Table ${o.table.number}` : <span className="text-orange-600">Parcel / Takeaway</span>}
                 </div>
               </div>
               <span className="text-xs font-semibold text-slate-400">

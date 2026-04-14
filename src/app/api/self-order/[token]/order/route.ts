@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         total,
         note: [note, customerName ? `Customer: ${customerName}` : '', customerPhone ? `Phone: ${customerPhone}` : ''].filter(Boolean).join(' | ') || null,
         isQrOrder: true,
-        status: 'SENT', // Directly visible to kitchen
+        status: 'DRAFT', // Not visible to kitchen until paid
         items: {
           create: items.map((item: { productId: string; variantId?: string; quantity: number; price: number }) => ({
             productId: item.productId,

@@ -74,9 +74,18 @@ export default function FloorPage() {
     <div className="p-6 md:p-8 max-w-[1600px] mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-800 tracking-tight mb-1">Select Table</h1>
-          <p className="text-sm font-medium text-neutral-500">Choose an available table to begin a new ticket.</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.push(`/${role}/pos/order/takeaway`)}
+            className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <span className="text-xl">🥡</span>
+            Takeaway Order
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-neutral-800 tracking-tight mb-1">Select Table</h1>
+            <p className="text-sm font-medium text-neutral-500">Choose an available table to begin a new ticket.</p>
+          </div>
         </div>
         
         {/* Floor Selection */}

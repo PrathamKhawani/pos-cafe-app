@@ -57,11 +57,14 @@ export default function TrackPage({ params }: { params: { token: string; orderId
 
   useEffect(() => {
     loadOrder();
-    // Join order room for targeted updates
-    if (emit) {
-      setTimeout(() => emit('JOIN_ORDER', params.orderId), 500);
+  }, [loadOrder]);
+
+  // Join order room for targeted updates when socket is ready
+  useEffect(() => {
+    if (emit && params.orderId) {
+      emit('JOIN_ORDER', params.orderId);
     }
-  }, [loadOrder, emit, params.orderId]);
+  }, [emit, params.orderId]);
 
   // Fallback polling every 10s (in case socket connection drops)
   useEffect(() => {

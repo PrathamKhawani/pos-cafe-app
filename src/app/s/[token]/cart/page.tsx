@@ -82,7 +82,9 @@ export default function SelfCartPage() {
         },
         prefill: { name: "Guest", email: "", contact: "" },
         theme: { color: "#4f46e5" },
+        retry: { enabled: true, max_count: 1 },
         modal: {
+          confirm_close: true,
           ondismiss: function () { setPlacing(false); }
         }
       };

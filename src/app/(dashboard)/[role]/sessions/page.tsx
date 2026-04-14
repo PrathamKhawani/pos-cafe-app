@@ -19,7 +19,9 @@ export default function SessionsPage() {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
 
   async function load() {
-    const res = await fetch('/api/sessions');
+    const res = await fetch('/api/sessions', {
+      headers: { 'x-pos-role': role }
+    });
     const data = await res.json();
     const list = Array.isArray(data) ? data : [];
     setSessions(list);
@@ -31,7 +33,11 @@ export default function SessionsPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/sessions', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-pos-role': role
+        },
         body: JSON.stringify({ openingCash }),
       });
       const session = await res.json();
@@ -48,7 +54,11 @@ export default function SessionsPage() {
     const cash = prompt('Enter closing cash amount (₹):', '0');
     if (cash === null) return;
     await fetch(`/api/sessions/${activeSession.id}/close`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', 
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-pos-role': role
+      },
       body: JSON.stringify({ closingCash: cash }),
     });
     toast.success('Session closed'); load();

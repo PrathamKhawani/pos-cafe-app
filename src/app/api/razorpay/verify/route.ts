@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       // Mark order as PAID
       prisma.order.update({
         where: { id: internalOrderId },
-        data: { status: 'PAID' }
+        data: { status: 'SENT' }
       })
     ]);
 

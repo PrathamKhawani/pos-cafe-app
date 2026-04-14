@@ -77,7 +77,9 @@ export default function MobilePayPage() {
           }
         },
         theme: { color: "#7C5C3E" },
+        retry: { enabled: true, max_count: 1 },
         modal: {
+            confirm_close: true,
             ondismiss: function() {
                 setLoading(false);
             }
