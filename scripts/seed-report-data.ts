@@ -5,113 +5,112 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🔍 Fetching existing records...');
 
-  const branches = await prisma.branch.findMany({ take: 5 });
-  const categories = await prisma.category.findMany({ take: 10 });
+  const branches = await prisma.branch.findMany();
   const products = await prisma.product.findMany({ take: 30 });
   const users = await prisma.user.findMany({ where: { role: 'ADMIN' }, take: 1 });
 
   if (!branches.length || !products.length || !users.length) {
-    console.error('❌ No branches, products, or users found! Please seed base data first.');
+    console.error('❌ No branches, products, or users found!');
     process.exit(1);
   }
 
   const user = users[0];
-  const branch = branches[0];
-  const branchIds = branches.map(b => b.id);
-
-  console.log(`✅ Found: ${branches.length} branches, ${categories.length} categories, ${products.length} products`);
+  console.log(`✅ Found: ${branches.length} branches, ${products.length} products`);
   console.log(`✅ Using user: ${user.name} (${user.role})`);
+  console.log(`✅ Seeding branches: ${branches.map(b => b.name).join(', ')}\n`);
 
-  // Helper to get a date offset from now
-  const daysAgo = (days: number, hourOffset = 0): Date => {
+  const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const paymentMethods: ('CASH' | 'DIGITAL' | 'UPI')[] = ['CASH', 'DIGITAL', 'UPI'];
+
+  const daysAgo = (days: number, hourOffset = 10): Date => {
     const d = new Date();
     d.setDate(d.getDate() - days);
-    d.setHours(hourOffset + Math.floor(Math.random() * 4), Math.floor(Math.random() * 60), 0, 0);
+    d.setHours(hourOffset + Math.floor(Math.random() * 3), Math.floor(Math.random() * 60), 0, 0);
     return d;
   };
 
-  const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-  const paymentMethods: ('CASH' | 'DIGITAL' | 'UPI')[] = ['CASH', 'DIGITAL', 'UPI'];
-
-  // Build a seed plan: 
-  // TODAY: 8 orders across branches (morning and evening rush)
-  // THIS WEEK (last 7d): 5 orders per day
-  // THIS MONTH (last 30d): 4 orders per day
-  // THIS YEAR (last 365d): 2 orders per day for older dates
-
-  type OrderSpec = { daysBack: number; hourStart: number; count: number };
-  const plan: OrderSpec[] = [
-    // Today's orders (morning + afternoon + evening rush)
-    ...Array.from({ length: 10 }, (_, i) => ({ daysBack: 0, hourStart: 8 + i, count: 1 })),
-    // Yesterday
-    ...Array.from({ length: 8 }, () => ({ daysBack: 1, hourStart: 10, count: 1 })),
-    // 2-6 days ago (this week)
-    ...Array.from({ length: 5 }, (_, i) => ({ daysBack: i + 2, hourStart: 9, count: 6 })),
-    // 7-29 days ago (this month older)
-    ...Array.from({ length: 22 }, (_, i) => ({ daysBack: i + 7, hourStart: 11, count: 4 })),
-    // 30-364 days ago (this year older)
-    ...Array.from({ length: 30 }, (_, i) => ({ daysBack: 15 + (i * 11), hourStart: 12, count: 3 })),
+  // Date plan: each branch gets orders for all time periods
+  // Days back => count of orders for that day-slot
+  const datePlan: { daysBack: number; hourStart: number; count: number }[] = [
+    // TODAY (5 orders, morning + lunch + dinner)
+    { daysBack: 0, hourStart: 8, count: 2 },
+    { daysBack: 0, hourStart: 12, count: 2 },
+    { daysBack: 0, hourStart: 19, count: 2 },
+    // YESTERDAY
+    { daysBack: 1, hourStart: 9, count: 3 },
+    { daysBack: 1, hourStart: 20, count: 2 },
+    // LAST 7 DAYS (this week)
+    ...Array.from({ length: 5 }, (_, i) => ({ daysBack: i + 2, hourStart: 11, count: 4 })),
+    // LAST 30 DAYS (this month)
+    ...Array.from({ length: 20 }, (_, i) => ({ daysBack: i + 8, hourStart: 13, count: 3 })),
+    // OLDER MONTHS (yearly data — spread across 11 months back)
+    ...Array.from({ length: 11 }, (_, i) => [
+      { daysBack: 30 + (i * 28), hourStart: 10, count: 5 },
+      { daysBack: 30 + (i * 28) + 7, hourStart: 14, count: 4 },
+      { daysBack: 30 + (i * 28) + 14, hourStart: 18, count: 3 },
+    ]).flat(),
   ];
 
-  let created = 0;
+  let totalCreated = 0;
 
-  for (const spec of plan) {
-    for (let c = 0; c < spec.count; c++) {
-      const orderDate = daysAgo(spec.daysBack, spec.hourStart);
-      const thisBranch = pick(branchIds);
+  for (const branch of branches) {
+    console.log(`\n🏪 Seeding branch: ${branch.name}...`);
+    let branchCreated = 0;
 
-      // Pick 1-4 random products
-      const numItems = Math.floor(Math.random() * 4) + 1;
-      const chosenProducts: typeof products = [];
-      for (let i = 0; i < numItems; i++) {
-        chosenProducts.push(pick(products));
-      }
+    for (const spec of datePlan) {
+      for (let c = 0; c < spec.count; c++) {
+        const orderDate = daysAgo(spec.daysBack, spec.hourStart);
 
-      // Calculate total
-      const items = chosenProducts.map(p => ({
-        productId: p.id,
-        quantity: Math.floor(Math.random() * 3) + 1,
-        price: p.price,
-      }));
-      const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        // Pick 1-4 random products
+        const numItems = Math.floor(Math.random() * 4) + 1;
+        const chosenProducts = Array.from({ length: numItems }, () => pick(products));
 
-      try {
-        const order = await prisma.order.create({
-          data: {
-            status: 'PAID',
-            total,
-            branchId: thisBranch,
-            userId: user.id,
-            createdAt: orderDate,
-            updatedAt: orderDate,
-            items: {
-              create: items.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                price: item.price,
-                isPrepared: true,
-              }))
-            },
-            payment: {
-              create: {
-                method: pick(paymentMethods),
-                amount: total,
-                paidAt: orderDate,
+        const items = chosenProducts.map(p => ({
+          productId: p.id,
+          quantity: Math.floor(Math.random() * 3) + 1,
+          price: p.price,
+        }));
+        const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        try {
+          await prisma.order.create({
+            data: {
+              status: 'PAID',
+              total,
+              branchId: branch.id,
+              userId: user.id,
+              createdAt: orderDate,
+              updatedAt: orderDate,
+              items: {
+                create: items.map(item => ({
+                  productId: item.productId,
+                  quantity: item.quantity,
+                  price: item.price,
+                  isPrepared: true,
+                }))
+              },
+              payment: {
+                create: {
+                  method: pick(paymentMethods),
+                  amount: total,
+                  paidAt: orderDate,
+                }
               }
             }
-          }
-        });
-        created++;
-        if (created % 20 === 0) console.log(`  ...${created} orders created`);
-      } catch (e: any) {
-        console.warn(`⚠️ Skipped one order: ${e.message?.slice(0, 80)}`);
+          });
+          branchCreated++;
+          totalCreated++;
+        } catch (e: any) {
+          console.warn(`  ⚠️  Skipped: ${e.message?.slice(0, 80)}`);
+        }
       }
     }
+
+    console.log(`  ✅ ${branchCreated} orders created for ${branch.name}`);
   }
 
-  console.log(`\n✅ Done! Created ${created} seeded orders for reports.`);
-  console.log('📊 Your reports should now show data for Daily, Weekly, Monthly, and Yearly filters.');
+  console.log(`\n🎉 Done! Created ${totalCreated} orders across ${branches.length} branches.`);
+  console.log('📊 Reports now have full Daily, Weekly, Monthly, and Yearly data per branch.');
 }
 
 main()
