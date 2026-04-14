@@ -82,12 +82,12 @@ export default function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#1C0F08] text-white">
       {/* Logo */}
-      <div className="px-5 pt-7 pb-6 border-b border-white/5 flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-primary-600/20 text-primary-500 shadow-inner">
+      <div className="px-5 py-5 border-b border-white/5 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-primary-600/20 text-primary-500 shadow-inner">
           ☕
         </div>
         <div>
-          <h1 className="text-base font-black text-white tracking-tight leading-none">Odoo Cafe</h1>
+          <h1 className="text-sm font-black text-white tracking-tight leading-none">Odoo Cafe</h1>
           <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">POS System</p>
         </div>
       </div>
@@ -95,42 +95,42 @@ export default function Sidebar() {
       <BranchSwitcher />
 
       {/* Navigation Items */}
-      <div className="flex-1 overflow-y-auto px-3 py-6 space-y-1 custom-scrollbar">
+      <div className="flex-1 px-2.5 py-4 space-y-1">
         {filteredNav.map((item) => {
           const active = isActive(item.href);
           return (
             <Link
               key={item.href}
               href={getFullHref(item.href)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-300 group ${
                 active 
                   ? 'bg-primary-600 text-white shadow-lg shadow-primary-900/40 translate-x-1' 
                   : 'text-white/50 hover:bg-white/5 hover:text-white'
               }`}
             >
               <svg 
-                className={`w-5 h-5 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} 
+                className={`w-4 h-4 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={item.icon} />
               </svg>
-              <span className="text-sm font-bold tracking-wide">{item.label}</span>
-              {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />}
+              <span className="text-xs font-bold tracking-wide">{item.label}</span>
+              {active && <div className="ml-auto w-1 h-1 rounded-full bg-white shadow-[0_0_6px_white]" />}
             </Link>
           );
         })}
       </div>
 
       {/* User & Logout */}
-      <div className="p-4 border-t border-white/5 bg-black/20">
-        <div className="flex items-center gap-3 px-3 py-3 mb-3 bg-white/5 rounded-2xl border border-white/5">
-           <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center font-black text-sm shadow-inner uppercase">
+      <div className="p-3 border-t border-white/5 bg-black/20">
+        <div className="flex items-center gap-2.5 px-2.5 py-2.5 mb-2.5 bg-white/5 rounded-xl border border-white/5">
+           <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center font-black text-xs shadow-inner uppercase">
              {session?.username?.[0] || userRole?.[0] || 'U'}
            </div>
            <div className="flex-1 min-w-0">
-             <div className="text-xs font-black text-white truncate leading-none mb-1">
+             <div className="text-[11px] font-black text-white truncate leading-none mb-1">
                {session?.username || 'User Profile'}
              </div>
              <div className="text-[9px] font-bold text-white/30 truncate uppercase tracking-tighter">
@@ -140,12 +140,12 @@ export default function Sidebar() {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-2xl transition-all font-bold text-sm group"
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-red-400 hover:bg-red-400/10 rounded-xl transition-all font-bold text-xs group"
         >
-          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Logout Session
+          Logout
         </button>
       </div>
     </div>
@@ -156,24 +156,24 @@ export default function Sidebar() {
       {/* Mobile Toggle */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary-600 text-white shadow-2xl z-[60] flex items-center justify-center active:scale-90 transition-transform"
+        className="lg:hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-primary-600 text-white shadow-2xl z-[60] flex items-center justify-center active:scale-90 transition-transform"
       >
         {isOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
         ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 6h16M4 12h16M4 18h16" /></svg>
         )}
       </button>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-72 h-screen sticky top-0 shrink-0 shadow-2xl z-50">
+      <aside className="hidden lg:block w-64 h-screen sticky top-0 shrink-0 shadow-2xl z-50">
         {sidebarContent}
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       <div className={`lg:hidden fixed inset-0 z-[55] transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setIsOpen(false)} />
-        <aside className={`absolute top-0 bottom-0 left-0 w-[280px] transition-transform duration-500 ease-out-expo shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <aside className={`absolute top-0 bottom-0 left-0 w-[240px] transition-transform duration-500 shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           {sidebarContent}
         </aside>
       </div>
