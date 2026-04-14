@@ -230,5 +230,4 @@ enum SelfOrderMode {
 enum BranchType {
   SEATING
   TAKEAWAY
-  MIXED
 }

@@ -12,7 +12,6 @@ interface Branch {
 const TYPE_CONFIG = {
   SEATING:  { label: 'Seating',         color: '#2563EB', bg: '#EFF4FF'   },
   TAKEAWAY: { label: 'Takeaway',        color: '#2D7A4F', bg: '#EBF7F1'   },
-  MIXED:    { label: 'Mixed',           color: '#C8883A', bg: '#FEF6E4'   },
 };
 
 export default function AdminBranchesPage() {
@@ -142,7 +141,6 @@ export default function AdminBranchesPage() {
                     onChange={e => setForm({ ...form, type: e.target.value as any })}>
                     <option value="SEATING">Seating (Floors & Tables)</option>
                     <option value="TAKEAWAY">Takeaway Only</option>
-                    <option value="MIXED">Mixed Operations</option>
                   </select>
                 </div>
                 <div>
@@ -156,9 +154,8 @@ export default function AdminBranchesPage() {
                   <div className="p-2.5 rounded-lg border border-neutral-200"
                     style={{ background: TYPE_CONFIG[form.type as keyof typeof TYPE_CONFIG]?.bg }}>
                     <p className="text-xs font-medium" style={{ color: TYPE_CONFIG[form.type as keyof typeof TYPE_CONFIG]?.color }}>
-                      {form.type === 'SEATING'  && 'This branch will use Floors & Tables for ordering.'}
+                      {form.type === 'SEATING'  && 'This branch handles both floors/tables and parcel/takeaway.'}
                       {form.type === 'TAKEAWAY' && 'This branch handles direct takeaway orders only.'}
-                      {form.type === 'MIXED'    && 'This branch supports both seating and takeaway.'}
                     </p>
                   </div>
                 )}

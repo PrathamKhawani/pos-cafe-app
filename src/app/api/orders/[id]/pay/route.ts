@@ -10,12 +10,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       // 1. Fetch current status
       const current = await tx.order.findUnique({ where: { id: params.id } });
       
-      // 2. Determine new status: Only 'PAID' if already 'READY'
-      const newStatus = (current?.status === 'READY') ? 'PAID' : current?.status;
+      // 2. Determine new status: DRAFT -> SENT (to kitchen), READY -> PAID
+      let newStatus = current?.status;
+      if (current?.status === 'DRAFT') newStatus = 'SENT';
+      else if (current?.status === 'READY') newStatus = 'PAID';
+      else newStatus = 'PAID';
 
       const updated = await tx.order.update({
         where: { id: params.id },
-        data: { status: newStatus || 'PAID' },
+        data: { status: newStatus },
         include: { table: true, items: { include: { product: { include: { category: true } } } } },
       });
 

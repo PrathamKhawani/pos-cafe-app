@@ -53,8 +53,8 @@
     transition: color 0.4s cubic-bezier(0.2, 0, 0, 1);
   }
 
-  /* Ultra-elegant, soothing scrollbar */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  /* Elegant scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: #D8D0C5;
@@ -62,6 +62,15 @@
     transition: background 0.4s ease;
   }
   ::-webkit-scrollbar-thumb:hover { background: #B8A898; }
+
+  /* Smooth scroll support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #D8D0C5 transparent;
+  }
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: #B8A898;
+  }
 
   /* Selection color */
   ::selection {

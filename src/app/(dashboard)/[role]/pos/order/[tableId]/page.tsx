@@ -135,21 +135,14 @@ export default function OrderPage() {
       });
       const order = await res.json();
       
-      await fetch(`/api/orders/${order.id}/send`, { method: 'PUT' });
+      // We no longer call /send (which sets to SENT) here.
+      // We keep it as DRAFT until payment is successful.
       setOrderIdState(order.id);
       setOrderId(order.id);
 
-      try {
-        const { io } = await import('socket.io-client');
-        const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        socket.emit('NEW_ORDER');
-        socket.emit('ORDER_UPDATE', { orderId: order.id, status: 'SENT' });
-        setTimeout(() => socket.disconnect(), 1000);
-      } catch {}
-
-      toast.success('Order sent to kitchen!');
+      toast.success('Order created. Proceed to payment.');
       setShowPayment(true);
-    } catch { toast.error('Failed to send order'); } finally { setLoading(false); }
+    } catch { toast.error('Failed to create order'); } finally { setLoading(false); }
   }
 
   async function handlePay() {
@@ -205,13 +198,20 @@ export default function OrderPage() {
           });
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
+            finishPaymentFlow();
+            // Notify kitchen after payment verification
             try {
               const { io } = await import('socket.io-client');
               const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-              socket.emit('PAYMENT_DONE'); setTimeout(() => socket.disconnect(), 1000);
-            } catch {}
-            finishPaymentFlow();
-          } else { toast.error('Payment verification failed'); }
+              socket.emit('NEW_ORDER');
+              socket.emit('ORDER_UPDATE', { orderId: orderId, status: 'SENT' });
+              setTimeout(() => socket.disconnect(), 1000);
+            } catch (err) {
+              console.error('Socket notification error:', err);
+            }
+          } else { 
+            toast.error('Payment verification failed'); 
+          }
         },
         theme: { color: "#7C5C3E" }
       };
@@ -230,7 +230,10 @@ export default function OrderPage() {
       try {
         const { io } = await import('socket.io-client');
         const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        socket.emit('PAYMENT_DONE'); setTimeout(() => socket.disconnect(), 1000);
+        socket.emit('PAYMENT_DONE'); 
+        socket.emit('NEW_ORDER');
+        socket.emit('ORDER_UPDATE', { orderId: orderId, status: 'SENT' });
+        setTimeout(() => socket.disconnect(), 1000);
       } catch {}
       finishPaymentFlow();
     } catch { toast.error('Payment error'); } finally { setLoading(false); }
@@ -244,7 +247,7 @@ export default function OrderPage() {
       setTimeout(() => { 
         setShowThankYou(false); 
         setOrderIdState(null); 
-        router.push(tableId === 'takeaway' ? `/${role}/pos/takeaway` : `/${role}/pos/floor`); 
+        router.push(`/${role}/pos/floor`); 
       }, 2500);
   }
 
@@ -308,11 +311,10 @@ export default function OrderPage() {
           ))}
         </div>
 
-        {/* Product Grid */}
         <div 
           ref={menuDrag.ref}
           onMouseDown={menuDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing hover:overflow-y-scroll"
         >
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
             {filtered.map((product) => (
@@ -379,11 +381,10 @@ export default function OrderPage() {
           )}
         </div>
 
-        {/* Cart Items List */}
         <div 
           ref={cartDrag.ref}
           onMouseDown={cartDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing hover:overflow-y-scroll"
         >
           {items.map(item => (
             <div key={`${item.productId}-${item.variantId}`} className="flex flex-col gap-4 p-5 rounded-[2rem] bg-white border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
