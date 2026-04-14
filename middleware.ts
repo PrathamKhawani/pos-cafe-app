@@ -38,13 +38,17 @@ export async function middleware(request: NextRequest) {
   let targetRole = roleMap[targetRoleNameFromPath];
   let token = request.cookies.get(getAuthCookieName(targetRole))?.value;
 
-  // If no token for that specific role dashboard, check for an ADMIN token (admins can see everything)
+  // 1. Special case: If user is on a role-specific dashboard but missing that cookie, 
+  // check for an ADMIN token (Admins have access to all dashboards).
   if (!token && targetRole !== 'ADMIN') {
     token = request.cookies.get(getAuthCookieName('ADMIN'))?.value;
   }
 
-  // If still no token, check all possible cookies
-  if (!token) {
+  // 2. If NO token is found for the path's target role, we check if they are logged in AT ALL 
+  // only if they are on a non-role-specific path (like root or branch-select).
+  // On role-specific paths, we MUST NOT fall back to other roles automatically as it causes crossover.
+  if (!token && !targetRole) {
+    // This loop is ONLY for ambiguity resolution on generic paths like "/"
     for (const cookieName of ALL_AUTH_COOKIES) {
       const t = request.cookies.get(cookieName)?.value;
       if (t) {
@@ -54,7 +58,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Legacy fallback
+  // 3. Final fallback
   if (!token) {
     token = request.cookies.get('cafe-pos-session-v1')?.value;
   }

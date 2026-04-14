@@ -55,7 +55,10 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     }
   }
 
-  // 2. If we have a preference, try that cookie first
+  // 2. Map 'staff' segment to 'cashier' cookie role if necessary
+  if (preferredRole === 'staff') preferredRole = 'cashier';
+
+  // 3. If we have a preference, try that cookie ONLY
   if (preferredRole) {
     const cookieName = getAuthCookieName(preferredRole);
     const token = typeof req.cookies.get === 'function' 
@@ -64,15 +67,9 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     if (token) return token;
   }
 
-  // 3. Otherwise, check all possible role-specific cookies in order
-  for (const cookieName of ALL_AUTH_COOKIES) {
-    const token = typeof req.cookies.get === 'function' 
-      ? req.cookies.get(cookieName)?.value 
-      : req.cookies[cookieName];
-    if (token) return token;
-  }
+  // 4. Fallback is ONLY for the legacy session cookie if no role preference is found
+  // We NO LONGER loop through all possible role cookies as it causes crossover leaks
   
-  // 4. Legacy fallback
   return typeof req.cookies.get === 'function'
     ? req.cookies.get('cafe-pos-session-v1')?.value
     : req.cookies['cafe-pos-session-v1'];

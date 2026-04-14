@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import bcrypt from 'bcryptjs';
+import { hash } from 'bcryptjs';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

@@ -31,7 +31,11 @@ export default function BackendPage() {
     async function load() {
       try {
         // 1. Fetch user session to get the REAL role
-        const meRes = await fetch('/api/auth/me');
+        const meRes = await fetch('/api/auth/me', {
+          headers: {
+            'x-pos-role': roleSegment
+          }
+        });
         const meData = meRes.ok ? await meRes.json() : null;
         setSessionUser(meData);
 
