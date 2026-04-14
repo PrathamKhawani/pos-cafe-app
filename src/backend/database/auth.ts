@@ -42,11 +42,14 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
   let preferredRole: string | undefined;
   
   if (typeof req.headers.get === 'function') {
-    preferredRole = req.headers.get('x-pos-role')?.toLowerCase();
+    const headerRole = req.headers.get('x-pos-role')?.toLowerCase();
+    if (headerRole) {
+      preferredRole = headerRole === 'staff' ? 'cashier' : headerRole;
+    }
     
     // Fallback: Infer from Referer header if present
     if (!preferredRole) {
-      const referer = req.headers.get('referer');
+      const referer = req.headers.get('referer')?.toLowerCase();
       if (referer) {
         if (referer.includes('/admin')) preferredRole = 'admin';
         else if (referer.includes('/staff')) preferredRole = 'cashier';
@@ -55,7 +58,7 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     }
   }
 
-  // 2. Map 'staff' segment to 'cashier' cookie role if necessary
+  // 2. Normalize aliases
   if (preferredRole === 'staff') preferredRole = 'cashier';
 
   // 3. If we have a preference, try that cookie ONLY.

@@ -18,16 +18,24 @@ export default function Sidebar() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   // Derive role from URL segment ONLY for initial UI/immediate feedback
+  // Derive role suffix from URL segment to handle Admin browsing other panels
   const roleFromUrl = currentRoleSegment === 'admin' ? 'ADMIN' : 
                      currentRoleSegment === 'staff' ? 'CASHIER' : 
                      currentRoleSegment === 'kitchen' ? 'KITCHEN' : null;
   
-  // For SECURE filtering, we MUST use the role from the verified session (userRole)
-  // If userRole is still loading, we show NOTHING or only public items
+  // For SECURE filtering:
+  // 1. If user is an ADMIN, they can see EVERYTHING + items for the panel they are visiting.
+  // 2. If user is NOT admin, they only see their own role's items.
   const effectiveRole = userRole; 
-  const displayRole = userRole || roleFromUrl; // Used for non-sensitive UI if needed
+  const displayRole = userRole || roleFromUrl; 
+
+  // Combined role for navigation filtering (Admins get the context of the URL role)
+  const navRole = (userRole === 'ADMIN' && roleFromUrl) ? roleFromUrl : userRole;
 
   useEffect(() => {
+    // Prevent fetching with incorrect default 'admin' segment before params are ready
+    if (!params.role) return;
+
     async function fetchUser() {
       try {
         const res = await fetch('/api/auth/me', { 
@@ -39,13 +47,16 @@ export default function Sidebar() {
         if (res.ok) {
           const data = await res.json();
           if (data.role) setUserRole(data.role);
+        } else if (res.status === 401) {
+            // If genuinely unauthorized, could redirect but let's just null it
+            setUserRole(null);
         }
       } catch (err) {
         console.error('Failed to fetch user profile', err);
       }
     }
     fetchUser();
-  }, [currentRoleSegment]);
+  }, [currentRoleSegment, params.role]);
 
 
   function isActive(href: string, exact?: boolean) {
@@ -90,8 +101,8 @@ export default function Sidebar() {
 
       {/* Nav Links */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5 no-scrollbar">
-        {effectiveRole && ALL_NAV_ITEMS
-          .filter(item => !item.isShortcut && item.roles.includes(effectiveRole))
+        {navRole && ALL_NAV_ITEMS
+          .filter(item => !item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN'))))
           .map(item => {
             const fullHref = getFullHref(item.href);
             return (
@@ -109,12 +120,12 @@ export default function Sidebar() {
             );
           })}
 
-        {effectiveRole && ALL_NAV_ITEMS.filter(item => item.isShortcut && item.roles.includes(effectiveRole)).length > 0 && (
+        {navRole && ALL_NAV_ITEMS.filter(item => item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN')))).length > 0 && (
           <>
             <div className="h-px bg-white/10 my-3" />
             <p className="text-[10px] font-semibold text-white/30 uppercase tracking-wider px-3 mb-2">Shortcuts</p>
             {ALL_NAV_ITEMS
-              .filter(item => item.isShortcut && item.roles.includes(effectiveRole))
+              .filter(item => item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN'))))
               .map(item => {
                 const fullHref = getFullHref(item.href);
                 return (

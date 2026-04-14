@@ -28,6 +28,9 @@ export default function BackendPage() {
   */
 
   useEffect(() => {
+    // Prevent execution if role segment isn't hydrated yet (Next.js hydration safety)
+    if (!roleSegment) return;
+
     async function load() {
       try {
         // 1. Fetch user session to get the REAL role
@@ -37,7 +40,17 @@ export default function BackendPage() {
             'x-pos-role': roleSegment
           }
         });
-        const meData = meRes.ok ? await meRes.json() : null;
+        
+        let meData = null;
+        if (meRes.ok) {
+           meData = await meRes.json();
+        } else if (meRes.status === 401) {
+           // Invalid session for this role
+           setIsLoading(false);
+           setSessionUser(null);
+           return;
+        }
+        
         setSessionUser(meData);
 
         // Read the selected branch from cookie for branch-aware stats
@@ -74,7 +87,7 @@ export default function BackendPage() {
       }
     }
     load();
-  }, []);
+  }, [roleSegment]);
 
   // If user is ADMIN, they can "impersonate" another role's dashboard by visiting its URL
   const effectiveRole = sessionUser?.role === 'ADMIN' ? roleFromUrl : (sessionUser?.role || '');
