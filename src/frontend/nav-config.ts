@@ -45,7 +45,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN'],
   },
 
-  // --- MANAGEMENT (Staff/Cashier: Sessions + Payments only) ---
+  // --- MANAGEMENT ---
   {
     href: '/sessions',
     label: 'POS Sessions',
@@ -57,7 +57,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     href: '/payment-methods',
     label: 'Payments',
     desc: 'Cash, UPI, card methods',
-    icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+    icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3-3v8a3 3 0 003 3z',
     roles: ['ADMIN', 'CASHIER'],
   },
 
