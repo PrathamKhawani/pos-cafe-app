@@ -101,20 +101,19 @@ export async function GET(req: NextRequest) {
       LIMIT 10
     `, queryParams);
 
-    // ── 5. Top categories by revenue ──
+    // ── 5. All categories breakdown by revenue ──
     const topCategories = await queryCustom(`
       SELECT 
         c.name,
-        SUM(i.price * i.quantity) AS revenue
-      FROM "OrderItem" i
-      JOIN "Product" p ON i."productId" = p.id
-      LEFT JOIN "Category" c ON p."categoryId" = c.id
-      WHERE i."orderId" IN (
+        COALESCE(SUM(i.price * i.quantity), 0) AS revenue,
+        COUNT(DISTINCT i."orderId")::int AS orders
+      FROM "Category" c
+      LEFT JOIN "Product" p ON p."categoryId" = c.id
+      LEFT JOIN "OrderItem" i ON i."productId" = p.id AND i."orderId" IN (
         SELECT id FROM "Order" WHERE status = 'PAID' AND "createdAt" >= $1 ${branchFilter}
       )
       GROUP BY c.id, c.name
       ORDER BY revenue DESC
-      LIMIT 10
     `, queryParams);
 
     // ── 6. Daily sales aggregation ──

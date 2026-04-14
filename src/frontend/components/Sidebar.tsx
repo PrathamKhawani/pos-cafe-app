@@ -3,9 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import BranchSwitcher from './shared/BranchSwitcher';
-
-import { NavItem, ALL_NAV_ITEMS } from '../nav-config';
-
+import { ALL_NAV_ITEMS } from '../nav-config';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -16,52 +14,58 @@ export default function Sidebar() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-
-  // Derive role from URL segment ONLY for initial UI/immediate feedback
-  // Derive role suffix from URL segment to handle Admin browsing other panels
-  const roleFromUrl = currentRoleSegment === 'admin' ? 'ADMIN' : 
-                     currentRoleSegment === 'staff' ? 'CASHIER' : 
-                     currentRoleSegment === 'kitchen' ? 'KITCHEN' : null;
-  
-  // For SECURE filtering:
-  // 1. If user is an ADMIN, they can see EVERYTHING + items for the panel they are visiting.
-  // 2. If user is NOT admin, they only see their own role's items.
-  const effectiveRole = userRole; 
-  const displayRole = userRole || roleFromUrl; 
-
-  // Combined role for navigation filtering (Admins get the context of the URL role)
-  const navRole = (userRole === 'ADMIN' && roleFromUrl) ? roleFromUrl : userRole;
+  const [mounted, setMounted] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Prevent fetching with incorrect default 'admin' segment before params are ready
-    if (!params.role) return;
-
-    async function fetchUser() {
+    setMounted(true);
+    
+    async function checkAuth() {
+      setIsLoading(true);
       try {
-        const res = await fetch('/api/auth/me', { 
-          cache: 'no-store',
-          headers: {
-            'x-pos-role': currentRoleSegment
-          }
+        const res = await fetch('/api/auth/me', {
+          headers: { 'x-pos-role': currentRoleSegment }
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.role) setUserRole(data.role);
-        } else if (res.status === 401) {
-            // If genuinely unauthorized, could redirect but let's just null it
-            setUserRole(null);
+          setSession(data);
+          setUserRole(data.role);
+        } else {
+          setUserRole(null);
         }
-      } catch (err) {
-        console.error('Failed to fetch user profile', err);
+      } catch {
+        setUserRole(null);
+      } finally {
+        setIsLoading(false);
       }
     }
-    fetchUser();
-  }, [currentRoleSegment, params.role]);
+    
+    if (currentRoleSegment) {
+        checkAuth();
+    }
+  }, [currentRoleSegment]);
 
+  if (!mounted) return null;
+
+  // Filter modules based on the 'navRole' we want to display (from URL)
+  // and the actual userRole (permissions)
+  const navRole = currentRoleSegment.toUpperCase() === 'STAFF' ? 'CASHIER' : currentRoleSegment.toUpperCase();
+  
+  const filteredNav = ALL_NAV_ITEMS
+    .filter(item => {
+      const hasPermission = !item.isShortcut && (
+        item.roles.includes(navRole) || 
+        (userRole === 'ADMIN' && item.roles.includes('ADMIN')) ||
+        (userRole === 'ADMIN' && item.roles.includes(navRole))
+      );
+      return hasPermission;
+    });
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
-    return pathname?.startsWith(href);
+    const fullHref = getFullHref(href);
+    return pathname?.startsWith(fullHref);
   }
 
   async function handleLogout() {
@@ -76,120 +80,96 @@ export default function Sidebar() {
   };
 
   const sidebarContent = (
-    <>
+    <div className="flex flex-col h-full bg-[#1C0F08] text-white">
       {/* Logo */}
-      <div className="px-4 pt-5 pb-4 border-b border-white/10 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ background: 'rgba(201,168,125,0.2)' }}>☕</div>
-          <div>
-            <h1 className="text-sm font-bold text-white leading-none">Cafe POS</h1>
-            <p className="text-[10px] text-white/40 font-medium">Enterprise</p>
-          </div>
+      <div className="px-5 pt-7 pb-6 border-b border-white/5 flex items-center gap-3.5">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-primary-600/20 text-primary-500 shadow-inner">
+          ☕
         </div>
-        {/* Close button - mobile only */}
-        <button
-          onClick={() => setIsOpen(false)}
-          className="lg:hidden w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div>
+          <h1 className="text-base font-black text-white tracking-tight leading-none">Odoo Cafe</h1>
+          <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest mt-1">POS System</p>
+        </div>
       </div>
 
       <BranchSwitcher />
 
-      {/* Nav Links */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5 no-scrollbar">
-        {navRole && ALL_NAV_ITEMS
-          .filter(item => !item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN'))))
-          .map(item => {
-            const fullHref = getFullHref(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={fullHref}
-                onClick={() => setIsOpen(false)}
-                className={`sidebar-link ${isActive(fullHref, item.exact) ? 'active' : ''}`}
-              >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+      {/* Navigation Items */}
+      <div className="flex-1 overflow-y-auto px-3 py-6 space-y-1 custom-scrollbar">
+        {filteredNav.map((item) => {
+          const active = isActive(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={getFullHref(item.href)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${
+                active 
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-900/40 translate-x-1' 
+                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <item.icon className={`w-5 h-5 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+              <span className="text-sm font-bold tracking-wide">{item.title}</span>
+              {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />}
+            </Link>
+          );
+        })}
+      </div>
 
-        {navRole && ALL_NAV_ITEMS.filter(item => item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN')))).length > 0 && (
-          <>
-            <div className="h-px bg-white/10 my-3" />
-            <p className="text-[10px] font-semibold text-white/30 uppercase tracking-wider px-3 mb-2">Shortcuts</p>
-            {ALL_NAV_ITEMS
-              .filter(item => item.isShortcut && (item.roles.includes(navRole) || (userRole === 'ADMIN' && item.roles.includes('ADMIN'))))
-              .map(item => {
-                const fullHref = getFullHref(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={fullHref}
-                    onClick={() => setIsOpen(false)}
-                    className={`sidebar-link ${isActive(fullHref) ? 'active' : ''}`}
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                    </svg>
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
-          </>
-        )}
-      </nav>
-
-      {/* Logout */}
-      <div className="px-3 py-3 border-t border-white/10">
-        <button onClick={handleLogout} className="sidebar-link w-full text-red-300/70 hover:text-red-300 hover:bg-red-500/10">
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      {/* User & Logout */}
+      <div className="p-4 border-t border-white/5 bg-black/20">
+        <div className="flex items-center gap-3 px-3 py-3 mb-3 bg-white/5 rounded-2xl border border-white/5">
+           <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center font-black text-sm shadow-inner uppercase">
+             {session?.username?.[0] || userRole?.[0] || 'U'}
+           </div>
+           <div className="flex-1 min-w-0">
+             <div className="text-xs font-black text-white truncate leading-none mb-1">
+               {session?.username || 'User Profile'}
+             </div>
+             <div className="text-[9px] font-bold text-white/30 truncate uppercase tracking-tighter">
+               {userRole || 'Loading...'}
+             </div>
+           </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-2xl transition-all font-bold text-sm group"
+        >
+          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span>Logout</span>
+          Logout Session
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#1C0F08] px-4 py-2.5 flex items-center justify-between">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-white/70"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-white">Cafe POS</span>
-        </div>
-        <div className="w-9" />
-      </div>
+      {/* Mobile Toggle */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary-600 text-white shadow-2xl z-[60] flex items-center justify-center active:scale-90 transition-transform"
+      >
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        )}
+      </button>
 
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed lg:sticky lg:top-0 lg:h-screen inset-y-0 left-0 z-50 w-56 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] lg:translate-x-0 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`} style={{ background: '#1C0F08' }}>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:block w-72 h-screen sticky top-0 shrink-0 shadow-2xl z-50">
         {sidebarContent}
       </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      <div className={`lg:hidden fixed inset-0 z-[55] transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setIsOpen(false)} />
+        <aside className={`absolute top-0 bottom-0 left-0 w-[280px] transition-transform duration-500 ease-out-expo shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          {sidebarContent}
+        </aside>
+      </div>
     </>
   );
 }

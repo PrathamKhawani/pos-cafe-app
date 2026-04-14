@@ -94,6 +94,9 @@ export default function OrderPage() {
   ) : [];
 
   const handleProductClick = (product: Product) => {
+    // If we just finished a drag-scroll, don't trigger a click
+    if (menuDrag.isDragging.current) return;
+    
     if (product.variants && product.variants.length > 0) {
       setSelectedProduct(product);
       setSelectedVariants({});
@@ -320,7 +323,7 @@ export default function OrderPage() {
         <div 
           ref={menuDrag.ref}
           onMouseDown={menuDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing hover:overflow-y-scroll"
+          className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
         >
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
             {filtered.map((product) => (
@@ -390,10 +393,14 @@ export default function OrderPage() {
         <div 
           ref={cartDrag.ref}
           onMouseDown={cartDrag.onMouseDown}
-          className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing hover:overflow-y-scroll"
+          className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
         >
           {items.map(item => (
-            <div key={`${item.productId}-${item.variantId}`} className="flex flex-col gap-4 p-5 rounded-[2rem] bg-white border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300">
+            <div 
+              key={`${item.productId}-${item.variantId}`} 
+              onClick={(e) => cartDrag.isDragging.current && e.stopPropagation()}
+              className="flex flex-col gap-4 p-5 rounded-[2rem] bg-white border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300"
+            >
                <div className="flex justify-between items-start gap-4">
                   <div className="flex-1 min-w-0">
                      <div className="text-base font-black text-neutral-800 leading-tight mb-1">{item.name}</div>

@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import Sidebar from '@/frontend/components/Sidebar';
 import { Line, Bar, Pie, Doughnut } from '@/frontend/components/shared/ChartRegistry';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
@@ -11,7 +10,7 @@ interface ReportData {
   prevTotalOrders: number; prevTotalRevenue: number;
   branchBreakdown: { name: string; revenue: number; orders: number }[];
   topProducts: { name: string; qty: number; revenue: number }[];
-  topCategories: { name: string; revenue: number }[];
+  topCategories: { name: string; revenue: number; orders?: number }[];
   dailySales: Record<string, number>;
   hourlyDistribution: Record<string, { orders: number; revenue: number }>;
   paymentBreakdown: { method: string; count: number; total: number }[];
@@ -101,7 +100,6 @@ export default function ReportsPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3 items-center">
-              {/* Branch */}
               <div className="relative">
                 <select value={branch} onChange={e => setBranch(e.target.value)}
                   className="appearance-none bg-white border border-slate-200 text-slate-700 text-xs font-bold py-2.5 pl-4 pr-9 rounded-xl shadow-sm hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 cursor-pointer transition-all">
@@ -110,7 +108,6 @@ export default function ReportsPage() {
                 </select>
                 <svg className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
               </div>
-              {/* Period */}
               <div className="bg-white rounded-xl p-1 border border-slate-200 flex shadow-sm">
                 {['today','weekly','monthly','yearly'].map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
@@ -119,7 +116,6 @@ export default function ReportsPage() {
                   </button>
                 ))}
               </div>
-              {/* Refresh */}
               <button onClick={load} disabled={loading} className="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center shadow-sm hover:border-indigo-300 transition-all disabled:opacity-50">
                 <svg className={`w-4 h-4 text-slate-500 ${loading?'animate-spin':''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -157,7 +153,7 @@ export default function ReportsPage() {
               ))}
             </div>
 
-            {/* Revenue + Category */}
+            {/* Revenue + Category Mix */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-start mb-5">
@@ -180,78 +176,112 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            {/* Branch + Peak Hours */}
+            {/* Product Performance Table */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-bold text-slate-800">Revenue by Branch</h3>
-                  {branch !== 'all' && <span className="text-[10px] bg-amber-50 text-amber-600 font-bold px-2 py-1 rounded-lg">Select All Branches to compare</span>}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center">
+                  <h3 className="font-bold text-slate-800">Top Products</h3>
+                  <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">Revenue Rank</span>
                 </div>
-                <div className="h-[260px]">
-                  {data && data.branchBreakdown.length > 0 && data.branchBreakdown.some(b => b.revenue > 0)
-                    ? <Bar data={branchData} options={{ indexAxis: 'y' as const, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: (ctx) => ` ₹${fmt(Number(ctx.raw))}` } } }, scales: { x: { grid: { display: false }, ticks: { callback: (v) => `₹${fmt(Number(v))}`, font: { size: 10 } } }, y: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } } } }} />
-                    : <Empty icon="🏪" label={branch !== 'all' ? 'Select "All Branches" to compare' : 'No branch revenue yet'} />}
-                </div>
+                {data && data.topProducts.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <tr><th className="px-6 py-3">#</th><th className="px-6 py-3">Product</th><th className="px-6 py-3 text-center">Qty</th><th className="px-6 py-3 text-right">Revenue</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {data.topProducts.map((p, i) => (
+                          <tr key={i} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="px-6 py-4 text-[10px] font-black text-slate-400">{i+1}</td>
+                            <td className="px-6 py-4 font-bold text-slate-700 text-sm">{p.name}</td>
+                            <td className="px-6 py-4 text-center font-bold text-slate-500 text-sm">{p.qty}</td>
+                            <td className="px-6 py-4 text-right font-black text-indigo-600 text-sm">₹{fmt(p.revenue)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <Empty icon="📦" label="No product sales" />}
               </div>
+
+              {/* Peak Hours */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                 <h3 className="font-bold text-slate-800 mb-5">Peak Order Hours</h3>
                 <div className="h-[260px]">
                   {data && Object.keys(data.hourlyDistribution).length > 0
-                    ? <Bar data={hourlyData} options={{ maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: TT }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 60, callback: function(val, idx) { return idx % 3 === 0 ? this.getLabelForValue(idx) : ''; } } } } }} />
-                    : <Empty icon="⏱️" label="No orders in this period" />}
+                    ? <Bar data={hourlyData} options={{ maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: TT }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 60, callback: function(val, idx) { return idx % 3 === 0 ? this.getLabelForValue(idx) : ''; } } } } }} />
+                    : <Empty icon="⏱️" label="No orders" />}
                 </div>
               </div>
             </div>
 
-            {/* Products Table + Payment Mix */}
+            {/* DETAILED CATEGORY PERFORMANCE TABLE */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center">
-                  <h3 className="font-bold text-slate-800">Top Selling Products</h3>
-                  <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">Revenue Rank</span>
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+                  <h3 className="font-bold text-slate-800">Category Detailed Breakdown</h3>
+                  <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">All Categories</span>
                 </div>
-                {data && data.topProducts.length > 0 ? (
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      <tr><th className="px-6 py-3">#</th><th className="px-6 py-3">Product</th><th className="px-6 py-3 text-center">Units</th><th className="px-6 py-3 text-right">Revenue</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {data.topProducts.map((p, i) => (
-                        <tr key={i} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="px-6 py-4"><span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${i < 3 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>{i+1}</span></td>
-                          <td className="px-6 py-4 font-bold text-slate-700 text-sm">{p.name}</td>
-                          <td className="px-6 py-4 text-center font-bold text-slate-500 text-sm">{p.qty}</td>
-                          <td className="px-6 py-4 text-right font-black text-indigo-600 text-sm">₹{fmt(p.revenue)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : <div className="p-12 text-center text-slate-300"><span className="text-4xl block mb-2">📦</span><span className="text-sm font-bold">No product sales data</span></div>}
+                {data && data.topCategories.length > 0 ? (
+                  <div className="flex-1 overflow-y-auto max-h-[400px]">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 z-20 backdrop-blur-md">
+                        <tr><th className="px-6 py-3">Category</th><th className="px-6 py-3 text-center">Orders</th><th className="px-6 py-3 text-right">Revenue</th><th className="px-6 py-3 text-right">Mix %</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {data.topCategories.map((c, i) => {
+                          const pct = data.totalRevenue > 0 ? ((c.revenue / data.totalRevenue) * 100) : 0;
+                          return (
+                            <tr key={i} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="px-6 py-4 font-bold text-slate-700 text-sm flex items-center gap-3">
+                                <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: COLORS[i % COLORS.length] }} />
+                                {c.name}
+                              </td>
+                              <td className="px-6 py-4 text-center font-bold text-slate-500 text-sm">{c.orders || 0}</td>
+                              <td className="px-6 py-4 text-right font-black text-slate-800 text-sm">₹{fmt(c.revenue)}</td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-2.5">
+                                  <span className="text-[11px] font-black text-indigo-600 w-10">{pct.toFixed(1)}%</span>
+                                  <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
+                                    <div className="h-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]" style={{ width: `${pct}%` }} />
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <Empty icon="📂" label="No category data" />}
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <h3 className="font-bold text-slate-800 mb-5">Payment Mix</h3>
+              {/* Payment Mix */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col">
+                <h3 className="font-bold text-slate-800 mb-6">Payment Distribution</h3>
                 {data && data.paymentBreakdown.length > 0 ? (
-                  <>
-                    <div className="h-[160px] mb-5">
-                      <Doughnut data={pmData} options={{ maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: (ctx) => ` ₹${fmt(Number(ctx.raw))}` } } } }} />
+                  <div className="flex-1 flex flex-col">
+                    <div className="h-[200px] mb-8">
+                      <Doughnut data={pmData} options={{ maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: (ctx) => ` ₹${fmt(Number(ctx.raw))}` } } } }} />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4 flex-1 overflow-y-auto pr-1">
                       {data.paymentBreakdown.map((p, i) => {
                         const pct = data.totalRevenue > 0 ? ((p.total / data.totalRevenue) * 100) : 0;
-                        const c = ['#10B981','#6366F1','#F59E0B','#EF4444'][i];
+                        const c = ['#10B981','#6366F1','#F59E0B','#EF4444'][i % 4];
                         return (
                           <div key={i}>
-                            <div className="flex justify-between items-center text-xs mb-1">
-                              <span className="font-bold text-slate-600 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: c }} />{p.method}</span>
-                              <span className="font-black text-slate-800">₹{fmt(p.total)} <span className="text-slate-400 font-bold">({pct.toFixed(1)}%)</span></span>
+                            <div className="flex justify-between items-center text-xs mb-1.5 px-0.5">
+                              <span className="font-bold text-slate-500 flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ background: c }} />{p.method}</span>
+                              <span className="font-black text-slate-800">₹{fmt(p.total)} <span className="text-slate-400 font-bold ml-1">({pct.toFixed(1)}%)</span></span>
                             </div>
-                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: c }} /></div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${pct}%`, background: c }} />
+                            </div>
                           </div>
                         );
                       })}
                     </div>
-                  </>
+                  </div>
                 ) : <Empty icon="💳" label="No payment data" />}
               </div>
             </div>
