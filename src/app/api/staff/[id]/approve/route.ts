@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import { verifyToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
+import { verifyToken, getTokenFromRequest } from '@/backend/database/auth';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+    const token = getTokenFromRequest(req);
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
@@ -32,4 +32,3 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Failed to approve staff account' }, { status: 500 });
   }
 }
-

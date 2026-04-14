@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import { verifyToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
+import { verifyToken, getTokenFromRequest } from '@/backend/database/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+    const token = getTokenFromRequest(req);
     if (!token) return NextResponse.json({ error: 'No authentication token provided' }, { status: 401 });
 
     const payload = await verifyToken(token);

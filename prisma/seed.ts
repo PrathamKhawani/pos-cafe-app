@@ -492,18 +492,25 @@ async function main() {
   // ═══════════════════════════════════════════
   // 0. CLEANUP (Full Reset)
   // ═══════════════════════════════════════════
-  console.log('🧹 Cleaning up old data...');
-  await prisma.table.deleteMany({});
-  await prisma.floor.deleteMany({});
-  await prisma.payment.deleteMany({});
-  await prisma.orderItem.deleteMany({});
-  await prisma.order.deleteMany({});
-  await prisma.session.deleteMany({});
-  await prisma.branch.deleteMany({});
-  await prisma.productVariant.deleteMany({});
-  await prisma.product.deleteMany({});
-  await prisma.category.deleteMany({});
-  console.log('✅ Base cleanup complete.');
+  const isForcedReset = process.env.FORCED_RESET === 'true';
+  
+  if (isForcedReset) {
+    console.log('🧹 FORCED RESET: Cleaning up old data...');
+    await prisma.table.deleteMany({});
+    await prisma.floor.deleteMany({});
+    await prisma.payment.deleteMany({});
+    await prisma.orderItem.deleteMany({});
+    await prisma.order.deleteMany({});
+    await prisma.session.deleteMany({});
+    await prisma.branch.deleteMany({});
+    await prisma.productVariant.deleteMany({});
+    await prisma.product.deleteMany({});
+    await prisma.category.deleteMany({});
+    console.log('✅ Base cleanup complete.');
+  } else {
+    console.log('ℹ️ Skipping cleanup. Use FORCED_RESET=true to wipe database.');
+  }
+
 
   // ═══════════════════════════════════════════
   // 1. ADMIN USER
@@ -560,70 +567,75 @@ async function main() {
   // ═══════════════════════════════════════════
   // 4. BRANCHES, FLOORS & TABLES (Dynamic 10 Branches)
   // ═══════════════════════════════════════════
-  console.log('🏗️  Creating 10 Premium Branches with Dynamic Layouts...');
-  
-  const BRANCH_CONFIGS = [
-    { name: 'Downtown Cafe', type: 'SEATING', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Harbor Bistro', type: 'SEATING', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Skyline Lounge', type: 'MIXED', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Garden Terrace', type: 'SEATING', image: 'https://images.unsplash.com/photo-1533055640609-24b498dfd74c?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Urban Express', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Old Town Tavern', type: 'SEATING', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Seaside Grill', type: 'MIXED', image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800' },
-    { name: 'The Roastery', type: 'SEATING', image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Mountain Peak', type: 'SEATING', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Metro Plaza', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1481833761820-0509d3217039?auto=format&fit=crop&q=80&w=800' }
-  ];
-
+  const branchCount = await prisma.branch.count();
   const allTables = [];
 
-  for (const b of BRANCH_CONFIGS) {
-    const branch = await prisma.branch.create({
-      data: {
-        name: b.name,
-        type: b.type as any,
-        imageUrl: b.image,
-      }
-    });
-
-    if (b.type === 'TAKEAWAY') continue;
-
-    // Create a random number of floors (1-3)
-    const floorPool = [
-      'Grand Ballroom', 'Sunlit Terrace', 'Vintage Loft', 'Mezzanine Bar', 
-      'Library Lounge', 'Rooftop Garden', 'Secret Cellar', 'Main Atrium', 
-      'Gallery Walk', 'Sky Deck', 'Cozy Corner'
+  if (branchCount === 0 || isForcedReset) {
+    console.log('🏗️  Creating 10 Premium Branches with Dynamic Layouts...');
+    
+    const BRANCH_CONFIGS = [
+      { name: 'Downtown Cafe', type: 'SEATING', image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Harbor Bistro', type: 'SEATING', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Skyline Lounge', type: 'MIXED', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Garden Terrace', type: 'SEATING', image: 'https://images.unsplash.com/photo-1533055640609-24b498dfd74c?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Urban Express', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Old Town Tavern', type: 'SEATING', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Seaside Grill', type: 'MIXED', image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800' },
+      { name: 'The Roastery', type: 'SEATING', image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Mountain Peak', type: 'SEATING', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800' },
+      { name: 'Metro Plaza', type: 'TAKEAWAY', image: 'https://images.unsplash.com/photo-1481833761820-0509d3217039?auto=format&fit=crop&q=80&w=800' }
     ];
-    const floorCount = Math.floor(rng() * 3) + 1; // 1 to 3 floors
-    const selectedFloors = pickN(floorPool, floorCount, floorCount);
 
-    for (const floorName of selectedFloors) {
-      const floor = await prisma.floor.create({
+    for (const b of BRANCH_CONFIGS) {
+      const branch = await prisma.branch.create({
         data: {
-          name: floorName,
-          branchId: branch.id,
+          name: b.name,
+          type: b.type as any,
+          imageUrl: b.image,
         }
       });
 
-      // Create random number of tables per floor (5-12)
-      const tableCount = Math.floor(rng() * 8) + 6; 
-      for (let i = 1; i <= tableCount; i++) {
-        const prefix = floorName.split(' ').map(w => w[0]).join('').toUpperCase();
-        const t = await prisma.table.create({
+      if (b.type === 'TAKEAWAY') continue;
+
+      const floorPool = [
+        'Grand Ballroom', 'Sunlit Terrace', 'Vintage Loft', 'Mezzanine Bar', 
+        'Library Lounge', 'Rooftop Garden', 'Secret Cellar', 'Main Atrium', 
+        'Gallery Walk', 'Sky Deck', 'Cozy Corner'
+      ];
+      const floorCount = Math.floor(rng() * 3) + 1;
+      const selectedFloors = pickN(floorPool, floorCount, floorCount);
+
+      for (const floorName of selectedFloors) {
+        const floor = await prisma.floor.create({
           data: {
-            number: `${prefix}${i}`,
-            seats: pick([2, 4, 4, 4, 6, 8, 10]),
-            floorId: floor.id,
-            isActive: true,
-            tableType: pick(['Table', 'Booth', 'Bar', 'Table']),
+            name: floorName,
+            branchId: branch.id,
           }
         });
-        allTables.push(t);
+
+        const tableCount = Math.floor(rng() * 8) + 6; 
+        for (let i = 1; i <= tableCount; i++) {
+          const prefix = floorName.split(' ').map(w => w[0]).join('').toUpperCase();
+          const t = await prisma.table.create({
+            data: {
+              number: `${prefix}${i}`,
+              seats: pick([2, 4, 4, 4, 6, 8, 10]),
+              floorId: floor.id,
+              isActive: true,
+              tableType: pick(['Table', 'Booth', 'Bar', 'Table']),
+            }
+          });
+          allTables.push(t);
+        }
       }
     }
+    console.log(`✅ Default layouts created: ${allTables.length} tables.`);
+  } else {
+    console.log('ℹ️ Branches already exist. Skipping layout seeding.');
+    const tables = await prisma.table.findMany();
+    allTables.push(...tables);
   }
 
-  console.log(`✅ Branches: 10, Tables: ${allTables.length}`);
 
   // ═══════════════════════════════════════════
   // 5. POS CONFIG

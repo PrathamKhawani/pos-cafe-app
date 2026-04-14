@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import { verifyToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
+import { verifyToken, getTokenFromRequest } from '@/backend/database/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 
@@ -71,8 +71,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = getTokenFromRequest(req);
     const cookieStore = cookies();
-    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
     const branchId = cookieStore.get('branch-id')?.value;
     const payload = token ? await verifyToken(token) : null;
 

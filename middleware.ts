@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
+import { verifyToken, getAuthCookieName, ALL_AUTH_COOKIES } from '@/backend/database/auth';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,15 +14,46 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/s/') || // Customer specific routes
     pathname.startsWith('/api/auth');
 
-  // Check JWT cookie
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  // 1. Determine which role-specific cookie to look for based on path
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const firstSegment = pathSegments[0];
+  
+  const roleMap: Record<string, string> = {
+    'admin': 'ADMIN',
+    'staff': 'CASHIER',
+    'kitchen': 'KITCHEN'
+  };
 
-  // We want to skip redirecting to login if it's a public path and no token
+  // If it's a dashboard path, prioritize that role's cookie
+  let targetRole = roleMap[firstSegment];
+  let token = request.cookies.get(getAuthCookieName(targetRole))?.value;
+
+  // If no token for that specific role, check for an ADMIN token (admins can see everything)
+  if (!token && targetRole !== 'ADMIN') {
+    token = request.cookies.get(getAuthCookieName('ADMIN'))?.value;
+  }
+
+  // If still no token and it's not a dashboard path, check all possible cookies
+  if (!token && !targetRole) {
+    for (const cookieName of ALL_AUTH_COOKIES) {
+      const t = request.cookies.get(cookieName)?.value;
+      if (t) {
+        token = t;
+        break;
+      }
+    }
+  }
+
+  // Legacy fallback
+  if (!token) {
+    token = request.cookies.get('cafe-pos-session-v1')?.value;
+  }
+
+  // Check JWT cookie
   if (!token) {
     if (isPublicPath) {
       return NextResponse.next();
     }
-    // Redirect to login if no token is found for private routes
     const url = new URL('/login', request.url);
     return NextResponse.redirect(url);
   }
@@ -30,7 +61,6 @@ export async function middleware(request: NextRequest) {
   try {
     const payload = await verifyToken(token);
     if (!payload) {
-      // Invalid token
       if (isPublicPath) return NextResponse.next();
       const url = new URL('/login', request.url);
       return NextResponse.redirect(url);
@@ -44,48 +74,44 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. Role-Based Path Enforcement
-    const roleMap: Record<string, string> = {
+    const allowedSegment = roleMap[payload.role.toLowerCase()] || (payload.role === 'CASHIER' ? 'staff' : payload.role.toLowerCase());
+    // (Re-mapping for the segment check)
+    const normalizedRoleMap: Record<string, string> = {
         'ADMIN': 'admin',
         'CASHIER': 'staff',
         'KITCHEN': 'kitchen'
     };
     
-    const allowedSegment = roleMap[payload.role];
-    const pathSegments = pathname.split('/').filter(Boolean);
-    const firstSegment = pathSegments[0];
+    const segmentForRole = normalizedRoleMap[payload.role];
     const isDashboardPath = ['admin', 'staff', 'kitchen'].includes(firstSegment);
 
-    // If on a first-segment dashboard path, ensure it matches the user's role
-    // SUPERUSER EXCEPTION: Admins can visit any dashboard path
-    if (isDashboardPath && firstSegment !== allowedSegment && payload.role !== 'ADMIN') {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+    // Ensure session role matches path segment (Admins can go anywhere)
+    if (isDashboardPath && firstSegment !== segmentForRole && payload.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL(`/${segmentForRole}`, request.url));
     }
 
-    // 3. Admin-Only Module Protection (Regardless of whether it's /admin/xxx or /staff/xxx)
+    // 3. Admin-Only Module Protection
     const adminOnlyModules = ['branches', 'floors', 'categories', 'products', 'qr-print', 'staff', 'reports'];
     const staffAllowedModules = ['sessions', 'payment-methods'];
     const currentModule = pathSegments[1];
     
-    // Admin only check
     if (isDashboardPath && adminOnlyModules.includes(currentModule) && payload.role !== 'ADMIN') {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        return NextResponse.redirect(new URL(`/${segmentForRole}`, request.url));
     }
 
-    // Staff allowed modules check (exclude Kitchen from these)
     if (isDashboardPath && staffAllowedModules.includes(currentModule) && !['ADMIN', 'CASHIER'].includes(payload.role)) {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        return NextResponse.redirect(new URL(`/${segmentForRole}`, request.url));
     }
 
-    // Role-specific sub-routes
     if (pathname.includes('/kitchen-display') && !['ADMIN', 'KITCHEN', 'CASHIER'].includes(payload.role)) {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        return NextResponse.redirect(new URL(`/${segmentForRole}`, request.url));
     }
 
     if (pathname.startsWith('/pos') && !['ADMIN', 'CASHIER'].includes(payload.role)) {
-        return NextResponse.redirect(new URL(`/${allowedSegment}`, request.url));
+        return NextResponse.redirect(new URL(`/${segmentForRole}`, request.url));
     }
 
-    // 3. Branch selection enforcement
+    // 4. Branch selection enforcement
     const branchId = request.cookies.get('branch-id')?.value;
     const isStationPath = pathname.includes('/pos') || pathname.includes('/kitchen') || pathname === '/kitchen-display';
     
@@ -103,12 +129,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import { signToken, AUTH_COOKIE_NAME } from '@/backend/database/auth';
+import { signToken, getAuthCookieName } from '@/backend/database/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
       } 
     });
 
-    res.cookies.set(AUTH_COOKIE_NAME, token, { 
+    const cookieName = getAuthCookieName(user.role);
+    res.cookies.set(cookieName, token, { 
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, 
