@@ -9,9 +9,9 @@ export default function BackendPage() {
   const router = useRouter();
   const roleSegment = params.role as string;
   
-  const userRole = roleSegment === 'admin' ? 'ADMIN' : 
-                   roleSegment === 'staff' ? 'CASHIER' : 
-                   roleSegment === 'kitchen' ? 'KITCHEN' : '';
+  const roleFromUrl = roleSegment === 'admin' ? 'ADMIN' : 
+                    roleSegment === 'staff' ? 'CASHIER' : 
+                    roleSegment === 'kitchen' ? 'KITCHEN' : '';
 
   const [sessionUser, setSessionUser] = useState<any>(null);
   const [stats, setStats] = useState({ orders: 0, revenue: 0, products: 0, tables: 0 });
@@ -75,12 +75,19 @@ export default function BackendPage() {
     load();
   }, []);
 
-  const roleFromUrl = roleSegment === 'admin' ? 'ADMIN' : 
-                    roleSegment === 'staff' ? 'CASHIER' : 
-                    roleSegment === 'kitchen' ? 'KITCHEN' : '';
-
   // If user is ADMIN, they can "impersonate" another role's dashboard by visiting its URL
-  const effectiveRole = sessionUser?.role === 'ADMIN' ? roleFromUrl : (sessionUser?.role || roleFromUrl);
+  const effectiveRole = sessionUser?.role === 'ADMIN' ? roleFromUrl : (sessionUser?.role || '');
+
+  // Strict Redirect: If not loading to prevent flickering
+  useEffect(() => {
+    if (!isLoading && !sessionUser) {
+      router.replace('/login');
+    } else if (!isLoading && sessionUser && sessionUser.role !== 'ADMIN' && sessionUser.role !== roleFromUrl) {
+      // User is on the WRONG dashboard for their role. Redirect them to their own.
+      const correctPath = sessionUser.role === 'CASHIER' ? 'staff' : sessionUser.role.toLowerCase();
+      router.replace(`/${correctPath}`);
+    }
+  }, [isLoading, sessionUser, roleFromUrl, router]);
   
   // STAT CARDS - Filtered for privacy
   const statCards = [
@@ -119,6 +126,17 @@ export default function BackendPage() {
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  if (isLoading || !effectiveRole) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin" />
+          <p className="text-sm font-medium text-neutral-400">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-content py-6 animate-fade-in">

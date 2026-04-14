@@ -67,9 +67,16 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     if (token) return token;
   }
 
-  // 4. Fallback is ONLY for the legacy session cookie if no role preference is found
-  // We NO LONGER loop through all possible role cookies as it causes crossover leaks
+  // 4. Fallback: If no role match is found, try checking all possible role-specific cookies in order.
+  // This is needed for shared API routes like /api/tables that aren't specific to a dashboard.
+  for (const cookieName of ALL_AUTH_COOKIES) {
+    const token = typeof req.cookies.get === 'function' 
+      ? req.cookies.get(cookieName)?.value 
+      : req.cookies[cookieName];
+    if (token) return token;
+  }
   
+  // 5. Final legacy fallback
   return typeof req.cookies.get === 'function'
     ? req.cookies.get('cafe-pos-session-v1')?.value
     : req.cookies['cafe-pos-session-v1'];
