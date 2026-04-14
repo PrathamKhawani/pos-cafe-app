@@ -19,7 +19,10 @@ export default function POSLayout({ children }: { children: React.ReactNode }) {
       
       const [branchRes, meRes] = await Promise.all([
         fetch('/api/branches', { cache: 'no-store' }),
-        fetch('/api/auth/me', { cache: 'no-store' })
+        fetch('/api/auth/me', { 
+          cache: 'no-store',
+          headers: { 'x-pos-role': role }
+        })
       ]);
 
       if (branchRes.ok) {

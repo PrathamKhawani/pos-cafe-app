@@ -32,6 +32,7 @@ export default function BackendPage() {
       try {
         // 1. Fetch user session to get the REAL role
         const meRes = await fetch('/api/auth/me', {
+          cache: 'no-store',
           headers: {
             'x-pos-role': roleSegment
           }

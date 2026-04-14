@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
-import { signToken, getAuthCookieName } from '@/backend/database/auth';
+import { signToken, getAuthCookieName, ALL_AUTH_COOKIES } from '@/backend/database/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
@@ -46,12 +46,11 @@ export async function POST(req: NextRequest) {
 
     const cookieName = getAuthCookieName(user.role);
     
-    // Clear ALL other POS cookies first to prevent session overlap/priority issues
-    const { ALL_AUTH_COOKIES } = require('@/backend/database/auth');
-    (ALL_AUTH_COOKIES as string[]).forEach(name => {
-      if (name !== cookieName) res.cookies.delete(name);
+    // Clear ALL possible role-specific cookies first to ensure no overlap/priority issues
+    ALL_AUTH_COOKIES.forEach(name => {
+      res.cookies.set(name, '', { maxAge: 0, path: '/' });
     });
-    res.cookies.delete('cafe-pos-session-v1'); // Clear legacy too
+    res.cookies.set('cafe-pos-session-v1', '', { maxAge: 0, path: '/' }); // Clear legacy too
 
     res.cookies.set(cookieName, token, { 
       httpOnly: true, 
