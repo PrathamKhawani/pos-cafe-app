@@ -61,35 +61,40 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
   // 2. Normalize aliases
   if (preferredRole === 'staff') preferredRole = 'cashier';
 
-  // 3. If we have a preference, try that cookie ONLY.
-  // CRITICAL: We DO NOT fall back to other cookies if a specific role is preferred.
-  // This prevents an Admin session from bleeding into a Staff dashboard on refresh.
+  // 3. If we have a preference, try that cookie FIRST and ONLY.
+  // CRITICAL: We DO NOT fall back to other cookies if a specific role is preferred,
+  // EXCEPT for allowing an ADMIN to access other dashboards.
   if (preferredRole) {
     const cookieName = getAuthCookieName(preferredRole);
     const token = typeof req.cookies.get === 'function' 
       ? req.cookies.get(cookieName)?.value 
       : req.cookies[cookieName];
     
-    // If we have a token for the PREFERRED role, use it.
+    // 1. If we have the EXACT cookie for the preferred role, USE IT.
     if (token) return token;
     
-    // Special Case: If we are looking for a staff/kitchen session but missing it,
-    // we allow the ADMIN session as a backup (Admins have access to all dashboards).
+    // 2. ONLY if the preferred role cookie is missing, check if the user is an ADMIN.
+    // This allows Admins to view Staff/Kitchen dashboards without switching cookies.
     if (preferredRole !== 'admin') {
       const adminCookie = getAuthCookieName('admin');
       const adminToken = typeof req.cookies.get === 'function' 
         ? req.cookies.get(adminCookie)?.value 
         : req.cookies[adminCookie];
-      if (adminToken) return adminToken;
+      
+      if (adminToken) {
+         // Verification will happen later, but we allow the Admin token to be THE token
+         // for this request so the user's role is correctly identified as ADMIN.
+         return adminToken;
+      }
     }
 
-    // If we are on a role-specific path but HAVE NO TOKEN for that role or admin, 
-    // we MUST NOT fall back to other roles (e.g., if on /staff, don't pick /kitchen token).
+    // 3. If no matching cookie or admin cookie found for a role-specific request, RETURN UNDEFINED.
+    // This stops it from falling back to arbitrary cookies in step 4.
     return undefined;
   }
 
   // 4. Fallback: ONLY for genuinely ambiguous requests (no x-pos-role and no role-referer).
-  // Try checking all possible role-specific cookies in order.
+  // We STILL prefer 'admin' if multiple exist, but this is rare now that we use headers.
   for (const cookieName of ALL_AUTH_COOKIES) {
     const token = typeof req.cookies.get === 'function' 
       ? req.cookies.get(cookieName)?.value 

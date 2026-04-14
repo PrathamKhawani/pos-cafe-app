@@ -76,10 +76,13 @@ export default function MobilePayPage() {
             toast.error('Payment verification failed');
           }
         },
+        prefill: { name: "", email: "", contact: "" },
         theme: { color: "#7C5C3E" },
         retry: { enabled: true, max_count: 1 },
         modal: {
             confirm_close: true,
+            backdropclose: false,
+            escape: false,
             ondismiss: function() {
                 setLoading(false);
             }

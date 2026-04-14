@@ -59,7 +59,9 @@ function BranchSelectContent() {
     
     toast.success('Location active');
     setTimeout(() => {
-      router.push(`/${userRole}`);
+      // Use role from query param to ensure we return to the CORRECT dashboard
+      const roleHint = searchParams.get('role') || userRole;
+      router.push(`/${roleHint}`);
     }, 500);
   };
 

@@ -80,11 +80,13 @@ export default function SelfCartPage() {
             setPlacing(false);
           }
         },
-        prefill: { name: "Guest", email: "", contact: "" },
+        prefill: { name: "", email: "", contact: "" },
         theme: { color: "#4f46e5" },
         retry: { enabled: true, max_count: 1 },
         modal: {
           confirm_close: true,
+          backdropclose: false,
+          escape: false,
           ondismiss: function () { setPlacing(false); }
         }
       };

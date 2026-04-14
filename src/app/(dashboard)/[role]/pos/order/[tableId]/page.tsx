@@ -213,7 +213,13 @@ export default function OrderPage() {
             toast.error('Payment verification failed'); 
           }
         },
-        theme: { color: "#7C5C3E" }
+        prefill: { name: "", email: "", contact: "" },
+        theme: { color: "#7C5C3E" },
+        modal: {
+          backdropclose: false,
+          escape: false,
+          confirm_close: true
+        }
       };
       new (window as any).Razorpay(options).open();
     } catch (err) { toast.error('Payment integration error'); } finally { setLoading(false); }
