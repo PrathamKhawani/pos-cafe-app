@@ -22,9 +22,9 @@
       "@/frontend/*": ["./src/frontend/*"],
       "@/backend/*": ["./src/backend/*"],
       "@/components/*": ["./src/frontend/components/*"],
-      "@/stores/*": ["./src/frontend/stores/*"],
-      "@prisma/client": ["node_modules/@prisma/client"]
+      "@/stores/*": ["./src/frontend/stores/*"]
     }
+
 
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

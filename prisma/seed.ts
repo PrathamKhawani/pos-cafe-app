@@ -778,9 +778,11 @@ async function main() {
       if (plan.status === 'PAID') {
         await withRetry(() => prisma.payment.create({
           data: {
-            orderId: (order as any).id,
+            // @ts-ignore
+            orderId: order.id,
             method: plan.payMethod,
-            amount: (order as any).total,
+            // @ts-ignore
+            amount: order.total,
             paidAt: orderDate,
           },
         }));
