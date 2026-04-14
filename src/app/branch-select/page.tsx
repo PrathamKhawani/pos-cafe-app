@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,7 @@ interface Branch {
   imageUrl?: string;
 }
 
-export default function BranchSelectPage() {
+function BranchSelectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -51,7 +51,7 @@ export default function BranchSelectPage() {
        }
      }
      loadData();
-   }, []);
+   }, [searchParams]);
 
   const handleSelect = async (branch: Branch) => {
     setSelecting(branch.id);
@@ -145,3 +145,16 @@ export default function BranchSelectPage() {
     </div>
   );
 }
+
+export default function BranchSelectPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F5F3EF] flex items-center justify-center p-6">
+        <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+      </div>
+    }>
+      <BranchSelectContent />
+    </Suspense>
+  );
+}
+
