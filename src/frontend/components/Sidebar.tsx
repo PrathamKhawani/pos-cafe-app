@@ -30,7 +30,12 @@ export default function Sidebar() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        const res = await fetch('/api/auth/me', { 
+          cache: 'no-store',
+          headers: {
+            'x-pos-role': currentRoleSegment
+          }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.role) setUserRole(data.role);
@@ -40,7 +45,8 @@ export default function Sidebar() {
       }
     }
     fetchUser();
-  }, []);
+  }, [currentRoleSegment]);
+
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;

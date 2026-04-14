@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/s/') || // Customer specific routes
     pathname.startsWith('/api/auth');
 
-  // 1. Determine which role-specific cookie to look for based on path
+  // 1. Determine which role-specific cookie to look for based on path or referrer
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
   
@@ -24,17 +24,27 @@ export async function middleware(request: NextRequest) {
     'kitchen': 'KITCHEN'
   };
 
-  // If it's a dashboard path, prioritize that role's cookie
-  let targetRole = roleMap[firstSegment];
+  // Logic: First check the URL segment, then the Referer header (for API calls)
+  let targetRoleNameFromPath = firstSegment;
+  if (targetRoleNameFromPath === 'api') {
+      const referer = request.headers.get('referer');
+      if (referer) {
+          if (referer.includes('/admin')) targetRoleNameFromPath = 'admin';
+          else if (referer.includes('/staff')) targetRoleNameFromPath = 'staff';
+          else if (referer.includes('/kitchen')) targetRoleNameFromPath = 'kitchen';
+      }
+  }
+
+  let targetRole = roleMap[targetRoleNameFromPath];
   let token = request.cookies.get(getAuthCookieName(targetRole))?.value;
 
-  // If no token for that specific role, check for an ADMIN token (admins can see everything)
+  // If no token for that specific role dashboard, check for an ADMIN token (admins can see everything)
   if (!token && targetRole !== 'ADMIN') {
     token = request.cookies.get(getAuthCookieName('ADMIN'))?.value;
   }
 
-  // If still no token and it's not a dashboard path, check all possible cookies
-  if (!token && !targetRole) {
+  // If still no token, check all possible cookies
+  if (!token) {
     for (const cookieName of ALL_AUTH_COOKIES) {
       const t = request.cookies.get(cookieName)?.value;
       if (t) {
@@ -48,6 +58,7 @@ export async function middleware(request: NextRequest) {
   if (!token) {
     token = request.cookies.get('cafe-pos-session-v1')?.value;
   }
+
 
   // Check JWT cookie
   if (!token) {

@@ -38,7 +38,33 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 }
 
 export function getTokenFromRequest(req: NextRequest | any): string | undefined {
-  // Check all possible role-specific cookies
+  // 1. Get role preference from header or referrer
+  let preferredRole: string | undefined;
+  
+  if (typeof req.headers.get === 'function') {
+    preferredRole = req.headers.get('x-pos-role')?.toLowerCase();
+    
+    // Fallback: Infer from Referer header if present
+    if (!preferredRole) {
+      const referer = req.headers.get('referer');
+      if (referer) {
+        if (referer.includes('/admin')) preferredRole = 'admin';
+        else if (referer.includes('/staff')) preferredRole = 'cashier';
+        else if (referer.includes('/kitchen')) preferredRole = 'kitchen';
+      }
+    }
+  }
+
+  // 2. If we have a preference, try that cookie first
+  if (preferredRole) {
+    const cookieName = getAuthCookieName(preferredRole);
+    const token = typeof req.cookies.get === 'function' 
+      ? req.cookies.get(cookieName)?.value 
+      : req.cookies[cookieName];
+    if (token) return token;
+  }
+
+  // 3. Otherwise, check all possible role-specific cookies in order
   for (const cookieName of ALL_AUTH_COOKIES) {
     const token = typeof req.cookies.get === 'function' 
       ? req.cookies.get(cookieName)?.value 
@@ -46,9 +72,10 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     if (token) return token;
   }
   
-  // Legacy fallback
+  // 4. Legacy fallback
   return typeof req.cookies.get === 'function'
     ? req.cookies.get('cafe-pos-session-v1')?.value
     : req.cookies['cafe-pos-session-v1'];
 }
+
 

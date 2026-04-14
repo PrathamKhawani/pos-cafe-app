@@ -564,13 +564,13 @@ async function main() {
   }
   console.log(`✅ Products: ${PRODUCTS.length} (with variants)`);
 
-  // ═══════════════════════════════════════════
   // 4. BRANCHES, FLOORS & TABLES (Dynamic 10 Branches)
   // ═══════════════════════════════════════════
-  const branchCount = await prisma.branch.count();
-  const allTables = [];
+  const existingBranches = await prisma.branch.findMany({
+    include: { _count: { select: { floors: true } } }
+  });
 
-  if (branchCount === 0 || isForcedReset) {
+  if (existingBranches.length === 0 || isForcedReset) {
     console.log('🏗️  Creating 10 Premium Branches with Dynamic Layouts...');
     
     const BRANCH_CONFIGS = [
@@ -587,21 +587,36 @@ async function main() {
     ];
 
     for (const b of BRANCH_CONFIGS) {
-      const branch = await prisma.branch.create({
-        data: {
+      await prisma.branch.upsert({
+        where: { name: b.name },
+        update: {},
+        create: {
           name: b.name,
           type: b.type as any,
           imageUrl: b.image,
         }
       });
+    }
+  }
 
-      if (b.type === 'TAKEAWAY') continue;
+  // Reload branches to process layouts for all (existing and new)
+  const allBranches = await prisma.branch.findMany({
+    include: { _count: { select: { floors: true } } }
+  });
 
-      const floorPool = [
-        'Grand Ballroom', 'Sunlit Terrace', 'Vintage Loft', 'Mezzanine Bar', 
-        'Library Lounge', 'Rooftop Garden', 'Secret Cellar', 'Main Atrium', 
-        'Gallery Walk', 'Sky Deck', 'Cozy Corner'
-      ];
+  const allTables = [];
+  const floorPool = [
+    'Grand Ballroom', 'Sunlit Terrace', 'Vintage Loft', 'Mezzanine Bar', 
+    'Library Lounge', 'Rooftop Garden', 'Secret Cellar', 'Main Atrium', 
+    'Gallery Walk', 'Sky Deck', 'Cozy Corner'
+  ];
+
+  for (const branch of allBranches) {
+    if (branch.type === 'TAKEAWAY') continue;
+
+    // Only seed if branch has no floors
+    if (branch._count.floors === 0 || isForcedReset) {
+      console.log(`🏗️  Seeding dynamic layout for branch: ${branch.name}...`);
       const floorCount = Math.floor(rng() * 3) + 1;
       const selectedFloors = pickN(floorPool, floorCount, floorCount);
 
@@ -628,13 +643,16 @@ async function main() {
           allTables.push(t);
         }
       }
+    } else {
+        const existingTables = await prisma.table.findMany({
+            where: { floor: { branchId: branch.id } }
+        });
+        allTables.push(...existingTables);
     }
-    console.log(`✅ Default layouts created: ${allTables.length} tables.`);
-  } else {
-    console.log('ℹ️ Branches already exist. Skipping layout seeding.');
-    const tables = await prisma.table.findMany();
-    allTables.push(...tables);
   }
+
+  console.log(`✅ Current tables across all branches: ${allTables.length}`);
+
 
 
   // ═══════════════════════════════════════════
