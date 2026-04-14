@@ -45,6 +45,14 @@ export async function POST(req: NextRequest) {
     });
 
     const cookieName = getAuthCookieName(user.role);
+    
+    // Clear ALL other POS cookies first to prevent session overlap/priority issues
+    const { ALL_AUTH_COOKIES } = require('@/backend/database/auth');
+    (ALL_AUTH_COOKIES as string[]).forEach(name => {
+      if (name !== cookieName) res.cookies.delete(name);
+    });
+    res.cookies.delete('cafe-pos-session-v1'); // Clear legacy too
+
     res.cookies.set(cookieName, token, { 
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',

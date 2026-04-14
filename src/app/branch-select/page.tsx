@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface Branch {
@@ -12,18 +12,23 @@ interface Branch {
 
 export default function BranchSelectPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('admin');
 
-   useEffect(() => {
-     async function loadData() {
-       try {
-         const [branchRes, meRes] = await Promise.all([
-           fetch('/api/branches', { cache: 'no-store' }),
-           fetch('/api/auth/me', { cache: 'no-store' })
-         ]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const roleHint = searchParams.get('role');
+        const [branchRes, meRes] = await Promise.all([
+          fetch('/api/branches', { cache: 'no-store' }),
+          fetch('/api/auth/me', { 
+            cache: 'no-store',
+            headers: roleHint ? { 'x-pos-role': roleHint } : {}
+          })
+        ]);
          
          if (branchRes.ok) {
            const data = await branchRes.json();

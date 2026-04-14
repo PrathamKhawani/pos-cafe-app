@@ -22,7 +22,9 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || 'Login failed'); return; }
       toast.success('Access Granted');
-      router.push('/branch-select');
+      
+      const roleSeg = data.user.role === 'CASHIER' ? 'staff' : data.user.role.toLowerCase();
+      router.push(`/branch-select?role=${roleSeg}`);
     } catch {
       toast.error('Network error. Check connection.');
     } finally {
