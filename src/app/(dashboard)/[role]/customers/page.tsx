@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import Header from '@/frontend/components/Header';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -44,7 +43,18 @@ export default function CustomersPage() {
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F8F9FA]">
-      <Header title="Customers" />
+      <header className="px-6 py-6 bg-white border-b border-slate-200 shrink-0">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Guest Directory</h1>
+            <p className="text-sm font-bold text-slate-400 mt-0.5 uppercase tracking-widest leading-none">Customer Relationship Management</p>
+          </div>
+          <div className="flex items-center gap-2">
+             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Database Sync Active</span>
+          </div>
+        </div>
+      </header>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
         <div className="max-w-7xl mx-auto">

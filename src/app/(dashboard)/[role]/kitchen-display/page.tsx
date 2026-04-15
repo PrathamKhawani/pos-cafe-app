@@ -7,8 +7,8 @@ import { useSocket } from '@/hooks/useSocket';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-interface OrderItem { id: string; productId: string; quantity: number; isPrepared: boolean; note?: string; product: { name: string; isVegetarian: boolean }; }
-interface Order { id: string; status: string; createdAt: string; isQrOrder: boolean; items: OrderItem[]; table?: { number: string; floor?: { name: string; branch?: { name: string } } }; payment?: any; }
+interface OrderItem { id: string; productId: string; quantity: number; status: string; isPrepared: boolean; isCancelled: boolean; note?: string; product: { name: string; isVegetarian: boolean }; }
+interface Order { id: string; identifier?: string; status: string; createdAt: string; isQrOrder: boolean; items: OrderItem[]; customer?: { name: string }; table?: { number: string; floor?: { name: string; branch?: { name: string } } }; payment?: any; }
 
 const COLS = [
   { s: 'SENT', l: 'New Orders', color: '#ef4444', bg: '#fef2f2', btn: 'Start Preparing', next: 'PREPARING' },
@@ -82,23 +82,24 @@ export default function KitchenPage() {
     }
   }
 
-  async function toggleItem(orderId: string, itemId: string, isP: boolean) {
+  async function toggleItem(orderId: string, itemId: string, nextStatus: string) {
     try {
       await fetch(`/api/orders/${orderId}/items`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId, isPrepared: !isP })
+        body: JSON.stringify({ itemId, status: nextStatus })
       });
-      emit('ITEM_PREPARED', { orderId, itemId, isPrepared: !isP });
+      emit('ITEM_PREPARED', { orderId, itemId, status: nextStatus });
       mutate('/api/orders?status=SENT');
       mutate('/api/orders?status=PREPARING');
+      mutate('/api/orders?status=READY&limit=20');
     } catch {
       toast.error('Failed to update item');
     }
   }
 
   function getCount(status: string) {
-    return orders.filter((o: Order) => o.status === status).length;
+    return orders.filter((o: Order) => o.items.some(it => it.status === status && !it.isCancelled)).length;
   }
 
   return (
@@ -156,7 +157,7 @@ export default function KitchenPage() {
         {/* Desktop: 3 columns */}
         <div className="hidden lg:grid grid-cols-3 gap-4 h-full items-start">
           {COLS.map(c => (
-            <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
+            <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.items.some(it => it.status === c.s && !it.isCancelled))}
               onMove={moveStatus} onToggle={toggleItem} onCancel={cancelOrder} isReadOnly={isReadOnly} />
           ))}
         </div>
@@ -164,7 +165,7 @@ export default function KitchenPage() {
         {/* Mobile/Tablet: Single column based on active tab */}
         <div className="lg:hidden">
           {COLS.filter(c => c.s === activeTab).map(c => (
-            <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
+            <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.items.some(it => it.status === c.s && !it.isCancelled))}
               onMove={moveStatus} onToggle={toggleItem} onCancel={cancelOrder} isReadOnly={isReadOnly} />
           ))}
         </div>
@@ -177,7 +178,7 @@ function KitchenColumn({ col, orders, onMove, onToggle, onCancel, isReadOnly }: 
   col: typeof COLS[0];
   orders: Order[];
   onMove: (order: Order, status: string) => void;
-  onToggle: (orderId: string, itemId: string, isPrepared: boolean) => void;
+  onToggle: (orderId: string, itemId: string, nextStatus: string) => void;
   onCancel: (order: Order) => void;
   isReadOnly: boolean;
 }) {
@@ -220,30 +221,26 @@ function KitchenColumn({ col, orders, onMove, onToggle, onCancel, isReadOnly }: 
                 </div>
               </div>
             </div>
-            <div className="p-3 space-y-1.5">
-              {o.items.map((item: OrderItem) => (
+            <div className="p-3 space-y-1.5 min-h-[50px]">
+              {o.items.filter((it: OrderItem) => it.status === col.s && !it.isCancelled).map((item: OrderItem) => (
                 <div key={item.id} 
-                     onClick={() => !isReadOnly && !item.isCancelled && onToggle(o.id, item.id, item.isPrepared)}
+                     onClick={() => !isReadOnly && onToggle(o.id, item.id, col.next)}
                      className={`p-2 rounded-lg border transition-all ${
-                       isReadOnly || item.isCancelled ? 'cursor-default' : 'cursor-pointer'
-                     } ${
-                       item.isCancelled ? 'bg-red-50 border-red-100 opacity-40 grayscale select-none' : 
-                       item.isPrepared ? 'bg-slate-50 border-transparent opacity-50' : 'bg-white border-slate-100 hover:border-slate-300'
-                     }`}>
+                       isReadOnly ? 'cursor-default' : 'cursor-pointer hover:border-slate-300'
+                     } bg-white border-slate-100 shadow-sm shadow-slate-100/50`}>
                   <div className="flex items-start gap-2.5">
-                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border text-xs ${
-                      item.isPrepared ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300'
-                    }`}>{item.isPrepared && '✓'}</div>
-                    <div>
+                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border text-[10px] font-bold ${
+                      col.s === 'READY' ? 'bg-green-500 border-green-500 text-white' : 'border-slate-200 text-slate-400'
+                    }`}>
+                      {col.s === 'READY' ? '✓' : '→'}
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
                         <span className={`flex-shrink-0 inline-flex items-center justify-center w-3 h-3 rounded-sm border ${item.product?.isVegetarian ? 'border-green-600 bg-white' : 'border-red-600 bg-white'} align-middle`}>
                            <span className={`w-1.5 h-1.5 rounded-full ${item.product?.isVegetarian ? 'bg-green-600' : 'bg-red-600'}`}></span>
                         </span>
                         <span className="text-indigo-600 bg-indigo-50 px-1 rounded text-xs ml-0.5">{item.quantity}×</span>
-                        <span className={item.isPrepared ? 'line-through text-slate-400' : 'text-slate-800'}>{item.product?.name}</span>
-                        {item.isCancelled && (
-                          <span className="ml-auto text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Cancelled</span>
-                        )}
+                        <span className="text-slate-800 line-clamp-1">{item.product?.name}</span>
                       </div>
                       {item.note && <div className="text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded mt-1 inline-block">📝 {item.note}</div>}
                     </div>
