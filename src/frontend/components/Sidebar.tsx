@@ -93,19 +93,19 @@ export default function Sidebar() {
       <Link
         key={item.href}
         href={getFullHref(item.href)}
-        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-all duration-300 group ${
+        className={`flex items-center gap-2 px-2.5 py-1 rounded-lg transition-all duration-300 group ${
           active 
             ? 'bg-primary-600 text-white shadow-md translate-x-1' 
             : 'text-white/40 hover:bg-white/5 hover:text-white'
         }`}
       >
         <svg 
-          className={`w-3.5 h-3.5 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} 
+          className={`w-3 h-3 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} 
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={item.icon} />
         </svg>
-        <span className="text-[11px] font-bold tracking-tight uppercase">{item.label}</span>
+        <span className="text-[10px] font-bold tracking-tight uppercase">{item.label}</span>
         {active && <div className="ml-auto w-1 h-1 rounded-full bg-white shadow-[0_0_6px_white]" />}
       </Link>
     );
@@ -114,18 +114,18 @@ export default function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#1C0F08] text-white">
       {/* Logo Area (Compact) */}
-      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base bg-primary-600/20 text-primary-500 shadow-inner">☕</div>
+      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2.5">
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-sm bg-primary-600/20 text-primary-500 shadow-inner">☕</div>
         <div>
-          <h1 className="text-xs font-black text-white tracking-tight leading-none uppercase">Odoo Cafe</h1>
-          <p className="text-[8px] text-white/20 font-bold uppercase tracking-[0.2em] mt-1">Enterprise</p>
+          <h1 className="text-[11px] font-black text-white tracking-tight leading-none uppercase">Odoo Cafe</h1>
+          <p className="text-[7px] text-white/20 font-bold uppercase tracking-[0.2em] mt-0.5">Enterprise</p>
         </div>
       </div>
 
       <BranchSwitcher />
 
       {/* Ultra-Compact Navigation */}
-      <div className="flex-1 px-2.5 py-4 space-y-4 overflow-hidden">
+      <div className="flex-1 px-2 py-3 space-y-3 overflow-y-auto custom-scrollbar">
         {/* Main Section */}
         <div className="space-y-0.5">
           {mainItems.map((item) => <NavLink key={item.href} item={item} />)}
@@ -179,7 +179,7 @@ export default function Sidebar() {
   return (
     <>
       <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden fixed bottom-6 right-6 w-11 h-11 rounded-full bg-primary-600 text-white shadow-2xl z-[60] flex items-center justify-center transition-transform">{isOpen ? '✕' : '☰'}</button>
-      <aside className="hidden lg:block w-64 h-screen sticky top-0 shrink-0 shadow-2xl z-50">{sidebarContent}</aside>
+      <aside className="hidden lg:block w-56 h-screen sticky top-0 shrink-0 shadow-2xl z-50">{sidebarContent}</aside>
       <div className={`lg:hidden fixed inset-0 z-[55] transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setIsOpen(false)} />
         <aside className={`absolute top-0 bottom-0 left-0 w-[240px] transition-transform duration-500 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>{sidebarContent}</aside>

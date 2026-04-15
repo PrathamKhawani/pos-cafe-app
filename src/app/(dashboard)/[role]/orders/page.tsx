@@ -142,89 +142,101 @@ export default function OrdersPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6 flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Search Order</label>
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Order ID / Table..." 
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full bg-slate-50 border-none text-sm font-medium py-2.5 pl-10 pr-4 rounded-xl focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-300"
-              />
-              <svg className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 items-end">
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Search Order</label>
+              <div className="relative group">
+                <input 
+                  type="text" 
+                  placeholder="ID / Table..." 
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-sm font-bold py-2.5 pl-10 pr-4 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all placeholder:text-slate-300"
+                />
+                <svg className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Branch</label>
+              <div className="relative">
+                <select 
+                  value={branch}
+                  onChange={e => setBranch(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-sm font-bold py-2.5 pl-4 pr-10 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 cursor-pointer appearance-none transition-all"
+                >
+                  <option value="all">All Branches</option>
+                  {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <svg className="w-4 h-4 text-slate-300 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Order Type</label>
+              <div className="relative">
+                <select 
+                  value={orderType}
+                  onChange={e => setOrderType(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-sm font-bold py-2.5 pl-4 pr-10 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 cursor-pointer appearance-none transition-all"
+                >
+                  <option value="ALL">All Types</option>
+                  <option value="DINE_IN">Dine-in</option>
+                  <option value="TAKEAWAY">Takeaway</option>
+                </select>
+                <svg className="w-4 h-4 text-slate-300 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Status</label>
+              <div className="relative">
+                <select 
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-sm font-bold py-2.5 pl-4 pr-10 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 cursor-pointer appearance-none transition-all"
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="PAID">Paid</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="SENT">Sent</option>
+                  <option value="PREPARING">Preparing</option>
+                  <option value="READY">Ready</option>
+                </select>
+                <svg className="w-4 h-4 text-slate-300 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <div className="lg:col-span-1 xl:col-span-2 grid grid-cols-2 gap-3 items-end">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1">Date Range</label>
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-[11px] font-bold py-2.5 px-3 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all"
+                />
+              </div>
+              <div className="space-y-1.5 relative">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-1 opacity-0">To</label>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 text-[11px] font-bold py-2.5 px-3 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/30 transition-all"
+                />
+                
+                {/* Reset Link Abs Pos to avoid grid shift */}
+                <button 
+                  onClick={() => { setStartDate(''); setEndDate(''); setBranch('all'); setStatus('ALL'); setOrderType('ALL'); setSearch(''); }}
+                  className="absolute -bottom-6 right-1 text-[9px] font-black text-indigo-500 hover:text-indigo-600 uppercase tracking-widest transition-colors py-1"
+                >
+                  Clear All Filters
+                </button>
+              </div>
             </div>
           </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Branch</label>
-            <select 
-              value={branch}
-              onChange={e => setBranch(e.target.value)}
-              className="bg-slate-50 border-none text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl focus:ring-2 focus:ring-indigo-500/20 cursor-pointer appearance-none"
-            >
-              <option value="all">All Branches</option>
-              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Order Type</label>
-            <select 
-              value={orderType}
-              onChange={e => setOrderType(e.target.value)}
-              className="bg-slate-50 border-none text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl focus:ring-2 focus:ring-indigo-500/20 cursor-pointer appearance-none"
-            >
-              <option value="ALL">All Types</option>
-              <option value="DINE_IN">Dine-in</option>
-              <option value="TAKEAWAY">Takeaway</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
-            <select 
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              className="bg-slate-50 border-none text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl focus:ring-2 focus:ring-indigo-500/20 cursor-pointer appearance-none"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PAID">Paid</option>
-              <option value="CANCELLED">Cancelled</option>
-              <option value="SENT">Sent</option>
-              <option value="PREPARING">Preparing</option>
-              <option value="READY">Ready</option>
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">From Date</label>
-              <input 
-                type="date" 
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="bg-slate-50 border-none text-sm font-bold py-2.5 px-4 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">To Date</label>
-              <input 
-                type="date" 
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="bg-slate-50 border-none text-sm font-bold py-2.5 px-4 rounded-xl focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => { setStartDate(''); setEndDate(''); setBranch('all'); setStatus('ALL'); setOrderType('ALL'); setSearch(''); }}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 py-3 px-2 transition-colors"
-          >
-            Reset
-          </button>
         </div>
 
         {/* Orders Table */}
