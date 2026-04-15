@@ -39,6 +39,7 @@ export default function OrderPage() {
   const [orderId, setOrderIdState] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, { id: string; price: number; value: string }>>({});
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   // Customer State
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string, name: string, phone: string } | null>(null);
@@ -306,9 +307,9 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-60px)] bg-[#F5F3EF] overflow-hidden animate-fade-in font-sans">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-60px)] bg-[#F5F3EF] overflow-hidden animate-fade-in font-sans relative">
       {/* Left: Menu Area */}
-      <div className="flex-1 flex flex-col border-r border-neutral-200 z-10 w-full min-w-0">
+      <div className={`flex-1 flex flex-col border-r border-neutral-200 z-10 w-full min-w-0 ${isCartOpen ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Top Bar Navigation */}
         <div className="bg-white px-6 py-4 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-4 shrink-0">
@@ -369,8 +370,9 @@ export default function OrderPage() {
           ref={menuDrag.ref}
           onMouseDown={menuDrag.onMouseDown}
           className="flex-1 overflow-y-auto min-h-0 w-full p-4 md:p-6 bg-[#F5F3EF] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          data-lenis-prevent
         >
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-24">
             {filtered.map((product) => (
               <div 
                 key={product.id} 
@@ -415,16 +417,48 @@ export default function OrderPage() {
             ))}
           </div>
         </div>
+
+        {/* Floating View Cart Button (Mobile Only) */}
+        {!isCartOpen && (
+          <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-[280px] px-4">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="w-full bg-primary-600 text-white rounded-2xl py-4 flex items-center justify-between px-6 shadow-2xl shadow-primary-500/40 animate-in fade-in slide-in-from-bottom-4 duration-300"
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                  {items.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-white text-primary-600 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center border border-primary-100">
+                      {items.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-widest">View Current Order</span>
+              </div>
+              <span className="text-sm font-black">₹{total().toFixed(0)}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Right: Cart Area */}
-      <div className="w-full max-w-[360px] md:max-w-[420px] flex flex-col bg-white border-l border-neutral-200 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] shrink-0">
-        <div className="p-6 border-b border-neutral-100 bg-white shrink-0 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-black text-neutral-800 tracking-tight">Current Cart</h2>
-            <div className="flex items-center gap-2 mt-1">
-               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-               <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">{items.reduce((a, b) => a + b.quantity, 0)} Items</p>
+      <div className={`
+        ${isCartOpen ? 'flex fixed inset-0 z-[60]' : 'hidden lg:flex'} 
+        w-full lg:max-w-[360px] xl:max-w-[420px] lg:relative
+        flex flex-col bg-white border-l border-neutral-200 shadow-[-10px_0_30px_rgba(0,0,0,0.03)] shrink-0
+      `}>
+        <div className="p-4 md:p-6 border-b border-neutral-100 bg-white shrink-0 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsCartOpen(false)} className="lg:hidden w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <div>
+              <h2 className="text-xl font-black text-neutral-800 tracking-tight leading-none md:leading-normal">Current Order</h2>
+              <div className="flex items-center gap-2 mt-1">
+                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                 <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">{items.reduce((a, b) => a + b.quantity, 0)} Items</p>
+              </div>
             </div>
           </div>
           {items.length > 0 && (
@@ -551,6 +585,7 @@ export default function OrderPage() {
           ref={cartDrag.ref}
           onMouseDown={cartDrag.onMouseDown}
           className="flex-1 overflow-y-auto min-h-0 px-4 py-6 space-y-4 bg-[#F9F8F6] custom-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
+          data-lenis-prevent
         >
           {items.map(item => (
             <div 
@@ -602,7 +637,7 @@ export default function OrderPage() {
           ))}
         </div>
 
-        <div className="bg-white border-t border-neutral-200 p-8 shrink-0 shadow-[0_-20px_50px_rgba(0,0,0,0.05)] z-10">
+        <div className="bg-white border-t border-neutral-200 p-6 md:p-8 shrink-0 shadow-[0_-20px_50px_rgba(0,0,0,0.05)] z-10">
           <div className="space-y-4 mb-8 px-1">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold uppercase tracking-widest text-neutral-300">Net Amount</span>

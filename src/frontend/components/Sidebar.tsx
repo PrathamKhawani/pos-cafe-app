@@ -125,7 +125,7 @@ export default function Sidebar() {
       <BranchSwitcher />
 
       {/* Ultra-Compact Navigation */}
-      <div className="flex-1 px-2 py-3 space-y-3 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 px-2 py-3 space-y-3 overflow-y-auto custom-scrollbar" data-lenis-prevent>
         {/* Main Section */}
         <div className="space-y-0.5">
           {mainItems.map((item) => <NavLink key={item.href} item={item} />)}
