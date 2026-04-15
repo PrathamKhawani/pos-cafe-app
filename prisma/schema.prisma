@@ -115,16 +115,16 @@ model Table {
 }
 
 model POSConfig {
-  id               String        @id @default(cuid())
-  cashEnabled      Boolean       @default(true)
-  digitalEnabled   Boolean       @default(true)
-  upiEnabled       Boolean       @default(false)
-  upiId            String?
-  selfOrderEnabled Boolean       @default(false)
-  selfOrderMode    SelfOrderMode @default(ONLINE_ORDERING)
-  bgImageUrl       String?
-  razorpayTerminalId String?
+  id                 String        @id @default(cuid())
+  cashEnabled        Boolean       @default(true)
+  digitalEnabled     Boolean       @default(true)
+  upiEnabled         Boolean       @default(false)
+  upiId              String?
+  selfOrderEnabled   Boolean       @default(false)
+  selfOrderMode      SelfOrderMode @default(ONLINE_ORDERING)
+  bgImageUrl         String?
   updatedAt          DateTime      @updatedAt
+  razorpayTerminalId String?
 }
 
 model Session {
@@ -145,27 +145,27 @@ model Session {
 }
 
 model Order {
-  id        String      @id @default(cuid())
-  tableId   String?
-  sessionId String?
-  userId    String?
-  status    OrderStatus @default(DRAFT)
-  total     Float       @default(0)
-  note      String?
-  isQrOrder Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  branchId  String?
-  branch    Branch?     @relation(fields: [branchId], references: [id])
-  session   Session?    @relation(fields: [sessionId], references: [id])
-  table     Table?      @relation(fields: [tableId], references: [id])
-  user      User?       @relation(fields: [userId], references: [id])
-  items     OrderItem[]
-  payment   Payment?
-  customerId String?
-  customer   Customer?    @relation(fields: [customerId], references: [id])
-  identifier String?      @unique
+  id          String      @id @default(cuid())
+  tableId     String?
+  sessionId   String?
+  userId      String?
+  status      OrderStatus @default(DRAFT)
+  total       Float       @default(0)
+  note        String?
+  isQrOrder   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  branchId    String?
+  customerId  String?
+  identifier  String?     @unique
   orderNumber Int         @default(autoincrement())
+  branch      Branch?     @relation(fields: [branchId], references: [id])
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  session     Session?    @relation(fields: [sessionId], references: [id])
+  table       Table?      @relation(fields: [tableId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  payment     Payment?
 
   @@index([branchId])
   @@index([status])
@@ -174,19 +174,19 @@ model Order {
 }
 
 model OrderItem {
-  id         String          @id @default(cuid())
-  orderId    String
-  productId  String
-  variantId  String?
-  quantity   Int             @default(1)
-  price      Float
-  status     OrderStatus     @default(SENT)
-  isPrepared Boolean         @default(false)
-  isCancelled Boolean        @default(false)
-  note       String?
-  order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  id          String          @id @default(cuid())
+  orderId     String
+  productId   String
+  variantId   String?
+  quantity    Int             @default(1)
+  price       Float
+  isPrepared  Boolean         @default(false)
+  note        String?
+  isCancelled Boolean         @default(false)
+  status      OrderStatus     @default(SENT)
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
@@ -204,6 +204,17 @@ model QRToken {
   token     String   @unique @default(cuid())
   createdAt DateTime @default(now())
   table     Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+
+  @@index([phone])
 }
 
 enum UserRole {
@@ -237,15 +248,4 @@ enum BranchType {
   SEATING
   TAKEAWAY
   MIXED
-}
-
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
-
-  @@index([phone])
 }

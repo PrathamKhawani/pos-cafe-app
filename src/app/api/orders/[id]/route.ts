@@ -22,10 +22,27 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const data = await req.json();
+    const { status, ...rest } = await req.json();
+    
+    // Prepare update data
+    const updateData: any = { ...rest };
+    if (status) {
+      updateData.status = status;
+      // Propagate status to items so the columns in Kitchen Display advance
+      updateData.items = {
+        updateMany: {
+          where: { isCancelled: false },
+          data: { 
+            status: status,
+            isPrepared: status === 'READY' || status === 'DELIVERED'
+          }
+        }
+      };
+    }
+
     const order = await prisma.order.update({
       where: { id: params.id },
-      data,
+      data: updateData,
       include: { 
         table: { select: { number: true } }, 
         items: { include: { product: { select: { name: true } }, variant: true } }, 

@@ -21,9 +21,9 @@ export default function SelfCartPage() {
   async function placeOrder() {
     if (cart.length === 0) { toast.error('Cart is empty'); return; }
     
-    // Validate guest info if either field is filled
-    if ((guestName || guestPhone) && (!guestName || guestPhone.length < 10)) {
-      toast.error('Please provide full name and valid phone');
+    // Validate guest info - BOTH ARE NOW REQUIRED
+    if (!guestName.trim() || guestPhone.length < 10) {
+      toast.error('Name and valid 10-digit Phone are required to place an order');
       return;
     }
 
@@ -268,41 +268,51 @@ export default function SelfCartPage() {
                 <span className="text-2xl font-black text-black tracking-tighter">₹{grandTotal.toFixed(0)}</span>
               </div>
             </div>
-            {/* Guest Information */}
-            <div className="bg-white rounded-[32px] p-6 mb-6 border border-gray-100 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-indigo-100/50 transition-colors" />
-              <div className="relative">
+            {/* Guest Information - Required */}
+            <div className="space-y-4 mb-6 text-gray-900">
+              {/* Section 1: Identity */}
+              <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-gray-900 tracking-tight">Your Details</h4>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-0.5">Optional for better service</p>
+                    <h4 className="text-sm font-black text-gray-900 tracking-tight">Guest Identity</h4>
+                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest leading-none mt-0.5">* Required Information</p>
                   </div>
                 </div>
+                <div className="space-y-1.5 cursor-text">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Your Full Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. John Doe"
+                    value={guestName}
+                    onChange={e => setGuestName(e.target.value)}
+                    className="w-full bg-gray-50 border border-transparent rounded-[20px] px-5 py-3.5 text-sm font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all outline-none"
+                  />
+                </div>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5 focus-within:translate-x-1 transition-transform">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. John Doe"
-                      value={guestName}
-                      onChange={e => setGuestName(e.target.value)}
-                      className="w-full bg-gray-50 border border-transparent rounded-[20px] px-5 py-3.5 text-sm font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all outline-none"
-                    />
+              {/* Section 2: Contact */}
+              <div className="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                   </div>
-                  <div className="space-y-1.5 focus-within:translate-x-1 transition-transform">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
-                    <input 
-                      type="tel" 
-                      placeholder="e.g. 9876543210"
-                      value={guestPhone}
-                      onChange={e => setGuestPhone(e.target.value)}
-                      className="w-full bg-gray-50 border border-transparent rounded-[20px] px-5 py-3.5 text-sm font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-300 transition-all outline-none"
-                    />
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 tracking-tight">Contact Number</h4>
+                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest leading-none mt-0.5">* Required Information</p>
                   </div>
+                </div>
+                <div className="space-y-1.5 cursor-text">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
+                  <input 
+                    type="tel" 
+                    placeholder="e.g. 9876543210"
+                    value={guestPhone}
+                    onChange={e => setGuestPhone(e.target.value)}
+                    className="w-full bg-gray-50 border border-transparent rounded-[20px] px-5 py-3.5 text-sm font-bold text-gray-900 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-300 transition-all outline-none"
+                  />
                 </div>
               </div>
             </div>

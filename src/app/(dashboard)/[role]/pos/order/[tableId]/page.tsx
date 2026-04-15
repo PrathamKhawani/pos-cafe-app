@@ -61,7 +61,9 @@ export default function OrderPage() {
   }, [customerSearch]);
 
   const createCustomer = async () => {
-    if (!newName || !customerSearch) return toast.error('Name & Phone required');
+    if (!newName.trim()) return toast.error('Full Name is required');
+    if (!customerSearch.trim() || customerSearch.length < 10) return toast.error('Valid 10-digit Phone is required');
+    
     try {
       setLoading(true);
       const res = await fetch('/api/customers', {
@@ -168,6 +170,7 @@ export default function OrderPage() {
 
   async function sendToKitchen() {
     if (items.length === 0) { toast.error('Cart is empty'); return; }
+    if (!selectedCustomer) { toast.error('Please select or add a guest first'); return; }
     setLoading(true);
     try {
       const res = await fetch('/api/orders', {
@@ -431,61 +434,95 @@ export default function OrderPage() {
           )}
         </div>
 
-        {/* Customer Section */}
-        <div className="px-6 py-4 bg-neutral-50/50 border-b border-neutral-100">
+        {/* Customer Section - Two Sections */}
+        <div className="px-6 py-5 bg-neutral-50/50 border-b border-neutral-100 space-y-4">
           {!selectedCustomer ? (
-            <div className="relative group">
-              <div className="flex items-center gap-2 bg-white border border-neutral-100 rounded-2xl px-4 py-2.5 shadow-sm focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500/30 transition-all">
-                <svg className="w-4 h-4 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <input 
-                  type="text" 
-                  placeholder="Guest phone or name..." 
-                  value={customerSearch}
-                  onChange={e => { setCustomerSearch(e.target.value); setIsAddingNew(false); }}
-                  className="flex-1 bg-transparent border-none text-[11px] font-bold outline-none placeholder:text-neutral-300"
-                />
-              </div>
-
-              {/* Search Results Dropdown */}
-              {(customerResults.length > 0 || customerSearch.length >= 3) && (
-                <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-neutral-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  {customerResults.map(c => (
-                    <button 
-                      key={c.id} 
-                      onClick={() => { setSelectedCustomer(c); setCustomerSearch(''); setCustomerResults([]); }}
-                      className="w-full text-left px-5 py-3 hover:bg-neutral-50 flex items-center justify-between border-b border-neutral-50 last:border-none"
-                    >
-                      <div>
-                        <div className="text-xs font-black text-neutral-800">{c.name}</div>
-                        <div className="text-[10px] font-bold text-neutral-400">{c.phone}</div>
-                      </div>
-                      <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-                  ))}
-                  {customerSearch.length >= 3 && !isAddingNew && (
-                    <button 
-                      onClick={() => setIsAddingNew(true)}
-                      className="w-full px-5 py-4 bg-primary-600 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
-                      Add New Guest
-                    </button>
-                  )}
-                  {isAddingNew && (
-                    <div className="p-4 bg-neutral-50 space-y-3">
-                      <input 
-                        type="text" 
-                        placeholder="Guest Name" 
-                        value={newName}
-                        onChange={e => setNewName(e.target.value)}
-                        className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs font-bold outline-none"
-                        autoFocus
-                      />
-                      <button onClick={createCustomer} className="w-full py-2.5 bg-neutral-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Create Profile</button>
+            <div className="space-y-4">
+              {/* Section 1: Search & Phone */}
+              <div className="bg-white rounded-[1.5rem] p-4 border border-neutral-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                   <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                   </div>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Section 1: Contact (Required)</span>
+                </div>
+                <div className="relative">
+                  <input 
+                    type="tel" 
+                    placeholder="Search phone or enter new..." 
+                    value={customerSearch}
+                    onChange={e => { setCustomerSearch(e.target.value); setIsAddingNew(false); }}
+                    className="w-full bg-neutral-50 border border-transparent rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:bg-white focus:border-emerald-200 transition-all"
+                  />
+                  
+                  {/* Search Results Dropdown */}
+                  {(customerResults.length > 0 || customerSearch.length >= 3) && !isAddingNew && (
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-neutral-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      {customerResults.map(c => (
+                        <button 
+                          key={c.id} 
+                          onClick={() => { setSelectedCustomer(c); setCustomerSearch(''); setCustomerResults([]); }}
+                          className="w-full text-left px-5 py-3 hover:bg-neutral-50 flex items-center justify-between border-b border-neutral-50 last:border-none"
+                        >
+                          <div>
+                            <div className="text-xs font-black text-neutral-800">{c.name}</div>
+                            <div className="text-[10px] font-bold text-neutral-400">{c.phone}</div>
+                          </div>
+                          <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                      ))}
+                      {customerSearch.length >= 10 && !isAddingNew && (
+                        <button 
+                          onClick={() => setIsAddingNew(true)}
+                          className="w-full px-5 py-4 bg-primary-600 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
+                          Create New Patient/Guest
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+
+              {/* Section 2: Identity (Visible when adding new) */}
+              <AnimatePresence>
+                {isAddingNew && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-white rounded-[1.5rem] p-4 border border-primary-100 shadow-sm relative overflow-hidden"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                       <div className="w-6 h-6 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
+                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                       </div>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-primary-400">Section 2: Guest Name (Required)</span>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Enter Full Name" 
+                      value={newName}
+                      onChange={e => setNewName(e.target.value)}
+                      className="w-full bg-neutral-50 border border-transparent rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:bg-white focus:border-primary-200 transition-all mb-3"
+                      autoFocus
+                    />
+                    <button 
+                      onClick={createCustomer} 
+                      className="w-full py-3 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
+                    >
+                      Save Guest Profile
+                    </button>
+                    <button 
+                      onClick={() => setIsAddingNew(false)}
+                      className="w-full mt-2 py-2 text-[10px] font-bold text-neutral-400 uppercase tracking-widest hover:text-neutral-600"
+                    >
+                      Cancel
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <div className="bg-primary-600 text-white rounded-[1.5rem] px-5 py-3 flex items-center justify-between shadow-lg shadow-primary-500/20">
