@@ -325,7 +325,7 @@ export default function OrderPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 min-w-0 flex-1 justify-end">
             <div className="flex bg-neutral-100 p-1 rounded-xl border border-neutral-200 shadow-sm shrink-0">
               <button onClick={() => setVegFilter('all')}
                 className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${vegFilter === 'all' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'}`}>
@@ -343,7 +343,7 @@ export default function OrderPage() {
               </button>
             </div>
 
-            <div className="relative w-full max-w-xs shrink-0 hidden md:block">
+            <div className="relative w-full max-w-xs hidden md:block">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </span>
