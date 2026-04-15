@@ -19,6 +19,7 @@ const orderSchema = z.object({
   sessionId: z.string().optional().nullable(),
   note: z.string().optional(),
   isQrOrder: z.boolean().default(false),
+  customerId: z.string().optional().nullable(),
   items: z.array(orderItemSchema).min(1)
 });
 
@@ -77,7 +78,10 @@ export async function GET(req: NextRequest) {
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' } },
-        { table: { number: { contains: search, mode: 'insensitive' } } }
+        { identifier: { contains: search, mode: 'insensitive' } },
+        { table: { number: { contains: search, mode: 'insensitive' } } },
+        { customer: { name: { contains: search, mode: 'insensitive' } } },
+        { customer: { phone: { contains: search, mode: 'insensitive' } } }
       ];
     }
 
@@ -133,6 +137,7 @@ export async function POST(req: NextRequest) {
         sessionId: validatedData.sessionId,
         branchId,
         userId: payload?.userId,
+        customerId: validatedData.customerId,
         total,
         note: validatedData.note,
         isQrOrder: validatedData.isQrOrder,
@@ -148,11 +153,24 @@ export async function POST(req: NextRequest) {
       },
       include: {
         table: true,
+        customer: true,
         items: { include: { product: { include: { category: true } }, variant: true } },
       },
     });
 
-    return NextResponse.json(order);
+    // Update with human-readable identifier
+    const identifier = `ORD-${1000 + order.orderNumber}`;
+    const finalizedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { identifier },
+      include: {
+        table: true,
+        customer: true,
+        items: { include: { product: { include: { category: true } }, variant: true } },
+      }
+    });
+
+    return NextResponse.json(finalizedOrder);
   } catch (e: any) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: e.issues }, { status: 400 });

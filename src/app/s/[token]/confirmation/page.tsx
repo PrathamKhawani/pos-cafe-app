@@ -7,6 +7,7 @@ function ConfirmContent({ token }: { token: string }) {
   const params = useSearchParams();
   const router = useRouter();
   const orderId = params.get('orderId');
+  const identifier = params.get('identifier');
   const total = params.get('total');
 
   return (
@@ -37,7 +38,7 @@ function ConfirmContent({ token }: { token: string }) {
           <div className="bg-gray-50 rounded-2xl p-5 mb-6 space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="font-semibold text-gray-400 uppercase tracking-wider">Order ID</span>
-              <span className="font-bold text-gray-900">#{orderId?.slice(-6).toUpperCase()}</span>
+              <span className="font-bold text-gray-900">#{identifier || orderId?.slice(-6).toUpperCase()}</span>
             </div>
             <div className="h-px bg-gray-200/50" />
             <div className="flex justify-between items-center">

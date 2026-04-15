@@ -255,9 +255,11 @@ export default function OrdersPage() {
               <tbody className="divide-y divide-slate-50">
                 {orders.length > 0 ? orders.map((order) => (
                   <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-black text-slate-800 uppercase tracking-tight">#{order.id.slice(-6)}</div>
-                      <div className="text-[10px] text-slate-400 font-bold mt-0.5">{formatDate(order.createdAt)}</div>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-slate-800 tracking-tight">#{order.identifier || order.id.slice(0, 8)}</span>
+                        <span className="text-[10px] font-bold text-slate-400 mt-0.5">{order.isQrOrder ? 'QR Order' : 'POS Session'}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {order.table ? (
@@ -341,7 +343,7 @@ export default function OrdersPage() {
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-black text-slate-900">Order Details</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{selectedOrder.id}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{selectedOrder.identifier || selectedOrder.id}</p>
               </div>
               <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -367,18 +369,42 @@ export default function OrdersPage() {
               <div className="space-y-4 mb-8">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Items Summary</h4>
                 <div className="space-y-2">
-                  {selectedOrder.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
+                  {selectedOrder.items.map((item: any) => (
+                    <div key={item.id} className={`flex items-center justify-between p-3 border rounded-xl transition-all ${item.isCancelled ? 'bg-slate-50 border-slate-100 opacity-50 grayscale' : 'bg-white border-slate-100 shadow-sm'}`}>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-400">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${item.isCancelled ? 'bg-slate-200 text-slate-400' : 'bg-indigo-50 text-indigo-500'}`}>
                           {item.quantity}x
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-slate-700">{item.product?.name || 'Product'}</div>
+                          <div className={`text-sm font-bold ${item.isCancelled ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{item.product?.name || 'Product'}</div>
                           {item.variant && <div className="text-[10px] text-slate-400 font-bold">{item.variant.attribute}: {item.variant.value}</div>}
                         </div>
                       </div>
-                      <div className="text-sm font-black text-slate-900">₹{(item.price * item.quantity).toLocaleString('en-IN')}</div>
+                      <div className="flex items-center gap-3">
+                        <div className={`text-sm font-black ${item.isCancelled ? 'text-slate-400' : 'text-slate-900'}`}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</div>
+                        {!item.isCancelled && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'PAID' && (
+                          <button 
+                            onClick={async () => {
+                              if(!confirm('Cancel this item?')) return;
+                              setIsUpdating(true);
+                              try {
+                                const res = await fetch(`/api/orders/${selectedOrder.id}/items/${item.id}/cancel`, { method: 'PATCH' });
+                                if(res.ok) {
+                                  const updated = await res.json();
+                                  setSelectedOrder(updated);
+                                  loadOrders(pagination.page);
+                                  toast.success('Item cancelled');
+                                }
+                              } catch { toast.error('Failed to cancel item'); }
+                              finally { setIsUpdating(false); }
+                            }}
+                            className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all"
+                            title="Cancel Item"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

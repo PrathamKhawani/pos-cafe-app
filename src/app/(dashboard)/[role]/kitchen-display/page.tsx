@@ -202,20 +202,32 @@ function KitchenColumn({ col, orders, onMove, onToggle, onCancel, isReadOnly }: 
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-600 uppercase tracking-tight">Paid</span>
                   )}
                 </div>
-                <div className="text-sm sm:text-base font-bold text-slate-800">
+                <div className="text-sm sm:text-base font-black text-slate-800 tracking-tight">
                   {o.table ? `Table ${o.table.number}` : <span className="text-orange-600">Parcel / Takeaway</span>}
                 </div>
+                {o.customer && (
+                  <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-0.5">
+                    Guest: {o.customer.name}
+                  </div>
+                )}
               </div>
-              <span className="text-xs font-semibold text-slate-400">
-                {new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+              <div className="text-right">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                  #{o.identifier || o.id.slice(0, 8)}
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 leading-none">
+                  {new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
             </div>
             <div className="p-3 space-y-1.5">
               {o.items.map((item: OrderItem) => (
-                <div key={item.id} onClick={() => !isReadOnly && onToggle(o.id, item.id, item.isPrepared)}
-                     className={`p-2 rounded-lg border transition-colors ${
-                       isReadOnly ? 'cursor-default' : 'cursor-pointer'
+                <div key={item.id} 
+                     onClick={() => !isReadOnly && !item.isCancelled && onToggle(o.id, item.id, item.isPrepared)}
+                     className={`p-2 rounded-lg border transition-all ${
+                       isReadOnly || item.isCancelled ? 'cursor-default' : 'cursor-pointer'
                      } ${
+                       item.isCancelled ? 'bg-red-50 border-red-100 opacity-40 grayscale select-none' : 
                        item.isPrepared ? 'bg-slate-50 border-transparent opacity-50' : 'bg-white border-slate-100 hover:border-slate-300'
                      }`}>
                   <div className="flex items-start gap-2.5">
@@ -229,6 +241,9 @@ function KitchenColumn({ col, orders, onMove, onToggle, onCancel, isReadOnly }: 
                         </span>
                         <span className="text-indigo-600 bg-indigo-50 px-1 rounded text-xs ml-0.5">{item.quantity}×</span>
                         <span className={item.isPrepared ? 'line-through text-slate-400' : 'text-slate-800'}>{item.product?.name}</span>
+                        {item.isCancelled && (
+                          <span className="ml-auto text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Cancelled</span>
+                        )}
                       </div>
                       {item.note && <div className="text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded mt-1 inline-block">📝 {item.note}</div>}
                     </div>

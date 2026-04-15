@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       return NextResponse.json({ error: 'Self ordering is disabled' }, { status: 403 });
     }
 
-    const { items, note, customerName, customerPhone } = await req.json();
+    const { items, note, customerId } = await req.json();
     const total = items.reduce(
       (sum: number, item: { price: number; quantity: number; tax?: number }) => 
         sum + item.price * item.quantity * (1 + (item.tax || 0) / 100),
@@ -29,8 +29,9 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       data: {
         tableId: qr.tableId,
         branchId,
+        customerId,
         total,
-        note: [note, customerName ? `Customer: ${customerName}` : '', customerPhone ? `Phone: ${customerPhone}` : ''].filter(Boolean).join(' | ') || null,
+        note,
         isQrOrder: true,
         status: 'DRAFT', // Not visible to kitchen until paid
         items: {
@@ -47,7 +48,20 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
         items: { include: { product: { include: { category: true } }, variant: true } } 
       },
     });
-    return NextResponse.json(order);
+
+    // Update with human-readable identifier
+    const identifier = `ORD-${1000 + order.orderNumber}`;
+    const finalizedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { identifier },
+      include: {
+        table: { include: { floor: true } },
+        customer: true,
+        items: { include: { product: { include: { category: true } }, variant: true } }
+      }
+    });
+
+    return NextResponse.json(finalizedOrder);
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

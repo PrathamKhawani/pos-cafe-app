@@ -38,6 +38,48 @@ export default function OrderPage() {
   const [orderId, setOrderIdState] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, { id: string; price: number; value: string }>>({});
+  
+  // Customer State
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string, name: string, phone: string } | null>(null);
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerResults, setCustomerResults] = useState<any[]>([]);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  // Search Customers
+  useEffect(() => {
+    if (customerSearch.length >= 3) {
+      const delay = setTimeout(async () => {
+        const res = await fetch(`/api/customers?search=${customerSearch}`);
+        if (res.ok) setCustomerResults(await res.json());
+      }, 300);
+      return () => clearTimeout(delay);
+    } else {
+      setCustomerResults([]);
+    }
+  }, [customerSearch]);
+
+  const createCustomer = async () => {
+    if (!newName || !customerSearch) return toast.error('Name & Phone required');
+    try {
+      setLoading(true);
+      const res = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, phone: customerSearch })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedCustomer(data);
+        setShowCustomerSearch(false);
+        setIsAddingNew(false);
+        setNewName('');
+        setCustomerSearch('');
+        toast.success('Customer added');
+      }
+    } catch { toast.error('Failed to create customer'); } finally { setLoading(false); }
+  };
 
   const menuDrag = useDragScroll();
   const cartDrag = useDragScroll();
@@ -133,17 +175,16 @@ export default function OrderPage() {
         body: JSON.stringify({ 
           tableId: tableId === 'takeaway' ? undefined : tableId, 
           sessionId, 
+          customerId: selectedCustomer?.id,
           items: items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity, price: i.price, tax: i.tax, note: i.note })) 
         })
       });
       const order = await res.json();
       
-      // We no longer call /send (which sets to SENT) here.
-      // We keep it as DRAFT until payment is successful.
       setOrderIdState(order.id);
       setOrderId(order.id);
 
-      toast.success('Order created. Proceed to payment.');
+      toast.success(`Order ${order.identifier || ''} created.`);
       setShowPayment(true);
     } catch { toast.error('Failed to create order'); } finally { setLoading(false); }
   }
@@ -387,6 +428,84 @@ export default function OrderPage() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
               Clear
             </button>
+          )}
+        </div>
+
+        {/* Customer Section */}
+        <div className="px-6 py-4 bg-neutral-50/50 border-b border-neutral-100">
+          {!selectedCustomer ? (
+            <div className="relative group">
+              <div className="flex items-center gap-2 bg-white border border-neutral-100 rounded-2xl px-4 py-2.5 shadow-sm focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500/30 transition-all">
+                <svg className="w-4 h-4 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <input 
+                  type="text" 
+                  placeholder="Guest phone or name..." 
+                  value={customerSearch}
+                  onChange={e => { setCustomerSearch(e.target.value); setIsAddingNew(false); }}
+                  className="flex-1 bg-transparent border-none text-[11px] font-bold outline-none placeholder:text-neutral-300"
+                />
+              </div>
+
+              {/* Search Results Dropdown */}
+              {(customerResults.length > 0 || customerSearch.length >= 3) && (
+                <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-neutral-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  {customerResults.map(c => (
+                    <button 
+                      key={c.id} 
+                      onClick={() => { setSelectedCustomer(c); setCustomerSearch(''); setCustomerResults([]); }}
+                      className="w-full text-left px-5 py-3 hover:bg-neutral-50 flex items-center justify-between border-b border-neutral-50 last:border-none"
+                    >
+                      <div>
+                        <div className="text-xs font-black text-neutral-800">{c.name}</div>
+                        <div className="text-[10px] font-bold text-neutral-400">{c.phone}</div>
+                      </div>
+                      <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                    </button>
+                  ))}
+                  {customerSearch.length >= 3 && !isAddingNew && (
+                    <button 
+                      onClick={() => setIsAddingNew(true)}
+                      className="w-full px-5 py-4 bg-primary-600 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
+                      Add New Guest
+                    </button>
+                  )}
+                  {isAddingNew && (
+                    <div className="p-4 bg-neutral-50 space-y-3">
+                      <input 
+                        type="text" 
+                        placeholder="Guest Name" 
+                        value={newName}
+                        onChange={e => setNewName(e.target.value)}
+                        className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                        autoFocus
+                      />
+                      <button onClick={createCustomer} className="w-full py-2.5 bg-neutral-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Create Profile</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-primary-600 text-white rounded-[1.5rem] px-5 py-3 flex items-center justify-between shadow-lg shadow-primary-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-black">
+                  {selectedCustomer.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-wider opacity-80 leading-none mb-1">Guest</div>
+                  <div className="text-sm font-black tracking-tight leading-none">{selectedCustomer.name}</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedCustomer(null)}
+                className="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
+                title="Remove Guest"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
           )}
         </div>
 
