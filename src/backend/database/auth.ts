@@ -93,8 +93,8 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     return undefined;
   }
 
-  // 4. Fallback: ONLY for genuinely ambiguous requests (no x-pos-role and no role-referer).
-  // We STILL prefer 'admin' if multiple exist, but this is rare now that we use headers.
+  // 5. Final broad fallback: If no preferred role found or preferred cookie missing,
+  // iterate through all possible cookies to find ANY valid session.
   for (const cookieName of ALL_AUTH_COOKIES) {
     const token = typeof req.cookies.get === 'function' 
       ? req.cookies.get(cookieName)?.value 
@@ -102,7 +102,7 @@ export function getTokenFromRequest(req: NextRequest | any): string | undefined 
     if (token) return token;
   }
   
-  // 5. Final legacy fallback
+  // 6. Legacy fallback
   return typeof req.cookies.get === 'function'
     ? req.cookies.get('cafe-pos-session-v1')?.value
     : req.cookies['cafe-pos-session-v1'];

@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useCartStore } from '@/stores/useCartStore';
 import Link from 'next/link';
 import { useDragScroll } from '@/hooks/useDragScroll';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Product {
   id: string; name: string; price: number; tax: number; uom?: string; description?: string; isVegetarian: boolean;

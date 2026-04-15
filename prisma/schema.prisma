@@ -102,6 +102,7 @@ model Table {
   number    String
   seats     Int       @default(4)
   isActive  Boolean   @default(true)
+  isOccupied Boolean  @default(false)
   tableType String?   @default("Table")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

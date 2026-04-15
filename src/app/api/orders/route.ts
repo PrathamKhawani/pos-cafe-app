@@ -158,6 +158,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Mark table as occupied
+    if (validatedData.tableId) {
+      await prisma.table.update({
+        where: { id: validatedData.tableId },
+        data: { isOccupied: true }
+      });
+    }
+
     // Update with human-readable identifier
     const identifier = `ORD-${1000 + order.orderNumber}`;
     const finalizedOrder = await prisma.order.update({

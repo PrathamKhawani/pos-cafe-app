@@ -49,6 +49,14 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       },
     });
 
+    // Mark table as occupied
+    if (qr.tableId) {
+      await prisma.table.update({
+        where: { id: qr.tableId },
+        data: { isOccupied: true }
+      });
+    }
+
     // Update with human-readable identifier
     const identifier = `ORD-${1000 + order.orderNumber}`;
     const finalizedOrder = await prisma.order.update({

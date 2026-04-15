@@ -1,27 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/database/prisma';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const data = await req.json();
-    if (data.seats !== undefined) data.seats = parseInt(data.seats);
-    const table = await prisma.table.update({ 
-      where: { id: params.id }, 
-      data, 
-      include: { floor: true } 
-    });
-    return NextResponse.json(table);
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  }
-}
+    const body = await req.json();
+    const { isOccupied } = body;
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    await prisma.table.delete({ where: { id: params.id } });
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    const table = await prisma.table.update({
+      where: { id: params.id },
+      data: { isOccupied },
+      include: { floor: true }
+    });
+
+    return NextResponse.json(table);
+  } catch (e: any) {
+    console.error('TABLE_PATCH_ERROR:', e);
+    return NextResponse.json({ error: 'Failed to update table' }, { status: 500 });
   }
 }

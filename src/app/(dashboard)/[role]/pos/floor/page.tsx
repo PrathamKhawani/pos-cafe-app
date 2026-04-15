@@ -42,12 +42,15 @@ export default function FloorPage() {
   
   const activeOrdersMap = useMemo(() => {
     const map: Record<string, boolean> = {};
-    const orders = ordersResponse?.orders; // Handling the new paginated structure
-    if (Array.isArray(orders)) {
-      orders.forEach((o: { tableId: string }) => { if (o.tableId) map[o.tableId] = true; });
+    if (Array.isArray(floors)) {
+      floors.forEach(f => {
+        f.tables.forEach(t => {
+          if (t.isOccupied) map[t.id] = true;
+        });
+      });
     }
     return map;
-  }, [ordersResponse]);
+  }, [floors]);
 
   // Handle Initial Floor Selection
   if (floors.length > 0 && !selectedFloor) {
@@ -64,6 +67,32 @@ export default function FloorPage() {
   }, [branchesData, router, role]);
 
   const currentFloor = useMemo(() => floors.find(f => f.id === selectedFloor), [floors, selectedFloor]);
+
+  async function releaseTable(e: React.MouseEvent, tableId: string) {
+    e.stopPropagation(); // Don't open the table
+    if (!confirm('Clear this table for new guests?')) return;
+    
+    try {
+      const res = await fetch(`/api/tables/${tableId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOccupied: false })
+      });
+      if (res.ok) {
+        toast.success('Table cleared');
+        mutate('/api/floors');
+        // Notify others
+        try {
+          const { io } = await import('socket.io-client');
+          const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+          socket.emit('NEW_ORDER'); // Triggers refresh on other screens
+          setTimeout(() => socket.disconnect(), 1000);
+        } catch {}
+      }
+    } catch {
+      toast.error('Failed to clear table');
+    }
+  }
 
   function selectTable(table: Table) {
     setTable(table.id);
@@ -121,7 +150,15 @@ export default function FloorPage() {
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3 shadow-sm ${occupied ? 'bg-blue-100 text-blue-600' : 'bg-neutral-50 text-neutral-400'}`}>
                 {occupied ? '🍽️' : '🪑'}
               </div>
-              {occupied && <div className="absolute top-4 right-4 w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse shadow-sm" />}
+              {occupied && (
+                <button 
+                  onClick={(e) => releaseTable(e, table.id)}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm z-30"
+                  title="Clear Table"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
               
               <div className="text-center">
                 <div className={`font-bold text-lg leading-none ${occupied ? 'text-blue-800' : 'text-neutral-800'}`}>{table.number}</div>
