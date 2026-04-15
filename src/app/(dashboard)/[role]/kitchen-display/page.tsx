@@ -63,6 +63,25 @@ export default function KitchenPage() {
     }
   }
 
+  async function cancelOrder(order: Order) {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      });
+      if (!res.ok) throw new Error();
+      emit('UPDATE_ORDER_STATUS', { orderId: order.id, status: 'CANCELLED' });
+      mutate('/api/orders?status=SENT');
+      mutate('/api/orders?status=PREPARING');
+      mutate('/api/orders?status=READY&limit=20');
+      toast.success('Order cancelled');
+    } catch {
+      toast.error('Failed to cancel order');
+    }
+  }
+
   async function toggleItem(orderId: string, itemId: string, isP: boolean) {
     try {
       await fetch(`/api/orders/${orderId}/items`, {
@@ -138,7 +157,7 @@ export default function KitchenPage() {
         <div className="hidden lg:grid grid-cols-3 gap-4 h-full items-start">
           {COLS.map(c => (
             <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
-              onMove={moveStatus} onToggle={toggleItem} isReadOnly={isReadOnly} />
+              onMove={onMove} onToggle={toggleItem} onCancel={cancelOrder} isReadOnly={isReadOnly} />
           ))}
         </div>
 
@@ -146,7 +165,7 @@ export default function KitchenPage() {
         <div className="lg:hidden">
           {COLS.filter(c => c.s === activeTab).map(c => (
             <KitchenColumn key={c.s} col={c} orders={orders.filter((o: Order) => o.status === c.s)}
-              onMove={moveStatus} onToggle={toggleItem} isReadOnly={isReadOnly} />
+              onMove={onMove} onToggle={toggleItem} onCancel={cancelOrder} isReadOnly={isReadOnly} />
           ))}
         </div>
       </div>
@@ -154,11 +173,12 @@ export default function KitchenPage() {
   );
 }
 
-function KitchenColumn({ col, orders, onMove, onToggle, isReadOnly }: {
+function KitchenColumn({ col, orders, onMove, onToggle, onCancel, isReadOnly }: {
   col: typeof COLS[0];
   orders: Order[];
   onMove: (order: Order, status: string) => void;
   onToggle: (orderId: string, itemId: string, isPrepared: boolean) => void;
+  onCancel: (order: Order) => void;
   isReadOnly: boolean;
 }) {
   return (
@@ -217,11 +237,19 @@ function KitchenColumn({ col, orders, onMove, onToggle, isReadOnly }: {
               ))}
             </div>
             {!isReadOnly && (
-              <button onClick={() => onMove(o, col.next)}
-                className="w-full py-2.5 text-white font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0"
-                style={{ background: col.color }}>
-                {col.btn}
-              </button>
+              <div className="flex bg-white">
+                {col.s === 'SENT' && (
+                  <button onClick={() => onCancel(o)}
+                    className="flex-1 py-2.5 bg-rose-50 text-rose-600 font-bold text-xs uppercase hover:bg-rose-100 transition-colors border-r border-slate-100">
+                    Cancel
+                  </button>
+                )}
+                <button onClick={() => onMove(o, col.next)}
+                  className="flex-[2] py-2.5 text-white font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0"
+                  style={{ background: col.color }}>
+                  {col.btn}
+                </button>
+              </div>
             )}
           </div>
         ))}

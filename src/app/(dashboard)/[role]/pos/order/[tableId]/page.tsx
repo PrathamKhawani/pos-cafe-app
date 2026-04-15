@@ -476,10 +476,42 @@ export default function OrderPage() {
             <button 
               onClick={() => orderId && setShowPayment(true)} 
               disabled={!orderId}
-              className={`w-28 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border flex items-center justify-center ${orderId ? 'bg-white border-primary-200 text-primary-700 hover:bg-primary-50 active:scale-95 shadow-sm' : 'bg-neutral-50 border-neutral-100 text-neutral-200 cursor-not-allowed'}`}
+              className={`flex-1 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border flex items-center justify-center ${orderId ? 'bg-white border-primary-200 text-primary-700 hover:bg-primary-50 active:scale-95 shadow-sm' : 'bg-neutral-50 border-neutral-100 text-neutral-200 cursor-not-allowed'}`}
             >
               Pay
             </button>
+            {orderId && (
+              <button 
+                onClick={async () => {
+                  if (!confirm('Cancel this order?')) return;
+                  setLoading(true);
+                  try {
+                    await fetch(`/api/orders/${orderId}`, { 
+                      method: 'PUT', 
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ status: 'CANCELLED' })
+                    });
+                    try {
+                      const { io } = await import('socket.io-client');
+                      const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+                      socket.emit('ORDER_UPDATE', { orderId, status: 'CANCELLED' });
+                      setTimeout(() => socket.disconnect(), 1000);
+                    } catch {}
+                    toast.success('Order cancelled');
+                    clearCart();
+                    router.push(`/${role}/pos/floor`);
+                  } catch {
+                    toast.error('Failed to cancel');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                className="w-14 items-center justify-center flex bg-rose-50 text-rose-500 rounded-2xl border border-rose-100 hover:bg-rose-100 transition-all active:scale-95"
+                title="Cancel Order"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
           </div>
         </div>
       </div>

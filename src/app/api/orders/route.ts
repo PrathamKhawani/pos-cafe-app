@@ -28,16 +28,58 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const tableId = searchParams.get('tableId');
     const branchId = searchParams.get('branchId') || req.cookies.get('branch-id')?.value;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const orderType = searchParams.get('orderType');
+    const search = searchParams.get('search');
     
+    // Auth context for branch filtering
+    const token = getTokenFromRequest(req);
+    const payload = token ? await verifyToken(token) : null;
+    const isAsAdmin = payload?.role === 'ADMIN';
+
     // Pagination
     const limit = parseInt(searchParams.get('limit') || '50');
     const page = parseInt(searchParams.get('page') || '1');
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (status) where.status = status;
+    if (status && status !== 'ALL') where.status = status;
     if (tableId) where.tableId = tableId;
-    if (branchId) where.branchId = branchId;
+    
+    // Branch filtering: If admin and branchId is 'all', don't filter by branch.
+    // Otherwise, use provided branchId or cookie branchId.
+    if (isAsAdmin && (branchId === 'all' || branchId === 'ALL')) {
+      // No branch filter for admin seeing all
+    } else if (branchId) {
+      where.branchId = branchId;
+    }
+
+    // Date range filtering
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    // Order Type filtering (Dine-in vs Takeaway)
+    if (orderType === 'DINE_IN') {
+      where.tableId = { not: null };
+    } else if (orderType === 'TAKEAWAY') {
+      where.tableId = null;
+    }
+
+    // Search filtering (Order ID or Table Number)
+    if (search) {
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { table: { number: { contains: search, mode: 'insensitive' } } }
+      ];
+    }
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
