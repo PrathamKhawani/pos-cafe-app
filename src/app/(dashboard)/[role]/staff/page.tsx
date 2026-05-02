@@ -108,6 +108,22 @@ export default function StaffManagementPage() {
     }
   }
 
+  async function handleReject(id: string, name: string) {
+    if (!confirm(`Reject registration for ${name}? This will permanently remove their account.`)) return;
+
+    try {
+      const res = await fetch(`/api/staff/${id}/reject`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Reject failed');
+      }
+      toast.success('Registration rejected and removed');
+      fetchStaff(); // Refresh list
+    } catch (err: any) {
+      toast.error(err.message || 'Could not reject registration');
+    }
+  }
+
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Are you sure you want to revoke access for ${name}? They will no longer be able to log in and will see the 'Pending Approval' message.`)) return;
     
@@ -217,7 +233,7 @@ export default function StaffManagementPage() {
                               Approve
                             </button>
                             <button 
-                              onClick={() => handleDelete(user.id, user.name)}
+                              onClick={() => handleReject(user.id, user.name)}
                               className="px-5 py-2 text-[10px] font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100 uppercase tracking-wider"
                             >
                               Reject
